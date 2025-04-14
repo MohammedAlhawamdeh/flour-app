@@ -13,6 +13,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   # Added dependencies for our flour tracking app
   sqflite: ^2.3.0  # For local database
+  sqflite_common_ffi: ^2.3.1  # For SQLite support on desktop platforms
+  sqlite3_flutter_libs: ^0.5.20  # Bundles SQLite with the app
   path_provider: ^2.1.1  # For file system access
   provider: ^6.1.1  # For state management
   intl: ^0.19.0  # For date/time formatting
@@ -22,6 +24,7 @@ dependencies:
   pdf: ^3.10.7  # For generating PDF reports and invoices
   printing: ^5.11.1  # For printing functionality
   http: ^1.1.2  # For API calls
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -40,3 +43,33 @@ flutter:
   #   - family: Schyler
   #     fonts:
   #       - asset: fonts/Schyler-Regular.ttf
+
+# You'll need to create these icon files before running the icon generator
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/flour_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/flour_icon.png"
+
+# Flutter launcher icons configuration
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/flour_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/flour_icon.png"
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: "assets/images/flour_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
+  windows:
+    generate: true
+    image_path: "assets/images/flour_icon.png"
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: "assets/images/flour_icon.png"

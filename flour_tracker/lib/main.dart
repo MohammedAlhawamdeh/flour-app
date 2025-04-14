@@ -1,122 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:flour_tracker/models/customer.dart';
+import 'package:flour_tracker/screens/home_screen.dart';
+import 'package:flour_tracker/screens/inventory_screen.dart';
+import 'package:flour_tracker/screens/sales_screen.dart';
+import 'package:flour_tracker/screens/customers_screen.dart';
+import 'package:flour_tracker/screens/customer_debts_screen.dart';
+// import 'package:flour_tracker/screens/reports_screen.dart';  // Temporarily disabled
+import 'package:flour_tracker/screens/debts_screen.dart';
+import 'package:flour_tracker/screens/splash_screen.dart';
+import 'package:flour_tracker/screens/settings_screen.dart';
+import 'package:flour_tracker/screens/backup_restore_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:flour_tracker/services/database_service.dart';
+import 'package:flour_tracker/providers/theme_provider.dart';
+import 'package:flour_tracker/providers/settings_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize database factory for desktop platforms
+  await DatabaseService.initializeDatabaseFactory();
+  
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
+      ],
+      child: const FlourTrackerApp(),
+    ),
+  );
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FlourTrackerApp extends StatelessWidget {
+  const FlourTrackerApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    // Listen for theme changes
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flour Tracker',
+      debugShowCheckedModeBanner: false,  // Disable debug banner for release
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.dark(
+          primary: Colors.amber.shade700,
+          secondary: Colors.amberAccent,
         ),
+        useMaterial3: true,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      initialRoute: '/splash',
+      routes: {
+        '/splash': (context) => const SplashScreen(),
+        '/': (context) => const HomeScreen(),
+        '/inventory': (context) => const InventoryScreen(),
+        '/sales': (context) => const SalesScreen(),
+        '/customers': (context) => const CustomersScreen(),
+        // '/reports': (context) => const ReportsScreen(),  // Temporarily disabled
+        '/debts': (context) => const DebtsScreen(),
+        '/settings': (context) => const SettingsScreen(),
+        '/backup': (context) => const BackupRestoreScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/customer_debts') {
+          final customer = settings.arguments as Customer;
+          return MaterialPageRoute(
+            builder: (context) => CustomerDebtsScreen(customer: customer),
+          );
+        }
+        return null;
+      },
     );
   }
 }
