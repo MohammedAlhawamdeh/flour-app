@@ -39,10 +39,7 @@ class HomeScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   const Text(
                     'Welcome to Flour Tracker',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -54,9 +51,9 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Main Menu Cards
             _buildMenuCard(
               context,
@@ -66,7 +63,7 @@ class HomeScreen extends StatelessWidget {
               () => Navigator.pushNamed(context, '/inventory'),
               Colors.blue.shade700,
             ),
-            
+
             _buildMenuCard(
               context,
               'Sales Management',
@@ -75,7 +72,7 @@ class HomeScreen extends StatelessWidget {
               () => Navigator.pushNamed(context, '/sales'),
               Colors.green.shade700,
             ),
-            
+
             _buildMenuCard(
               context,
               'Customer Management',
@@ -84,7 +81,7 @@ class HomeScreen extends StatelessWidget {
               () => Navigator.pushNamed(context, '/customers'),
               Colors.purple.shade700,
             ),
-            
+
             _buildMenuCard(
               context,
               'Debt Tracking',
@@ -93,7 +90,7 @@ class HomeScreen extends StatelessWidget {
               () => Navigator.pushNamed(context, '/debts'),
               Colors.red.shade700,
             ),
-            
+
             _buildDisabledMenuCard(
               context,
               'Reports',
@@ -118,9 +115,7 @@ class HomeScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -134,11 +129,7 @@ class HomeScreen extends StatelessWidget {
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  icon,
-                  size: 36,
-                  color: color,
-                ),
+                child: Icon(icon, size: 36, color: color),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -148,8 +139,8 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -166,7 +157,7 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-  
+
   // New method for disabled menu card
   Widget _buildDisabledMenuCard(
     BuildContext context,
@@ -178,9 +169,7 @@ class HomeScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -191,11 +180,7 @@ class HomeScreen extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                size: 36,
-                color: color.withOpacity(0.5),
-              ),
+              child: Icon(icon, size: 36, color: color.withOpacity(0.5)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -205,16 +190,16 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     title,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.grey,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     description,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                   ),
                 ],
               ),

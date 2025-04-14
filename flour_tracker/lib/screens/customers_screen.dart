@@ -35,9 +35,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading customers: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading customers: $e')));
       }
     } finally {
       setState(() {
@@ -53,123 +53,125 @@ class _CustomersScreenState extends State<CustomersScreen> {
         title: const Text('Customer Management'),
         backgroundColor: Colors.amber.shade700,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _customers.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _customers.isEmpty
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.people_outline,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No customers found',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a customer to get started',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.people_outline,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No customers found',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add a customer to get started',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _customers.length,
-                  itemBuilder: (context, index) {
-                    final customer = _customers[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    customer.name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.account_balance_wallet),
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                          context,
-                                          '/customer_debts',
-                                          arguments: customer,
-                                        );
-                                      },
-                                      color: Colors.amber.shade700,
-                                      tooltip: 'View Debts',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () => _showCustomerForm(customer),
-                                      color: Colors.blue,
-                                      tooltip: 'Edit',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => _deleteCustomer(customer),
-                                      color: Colors.red,
-                                      tooltip: 'Delete',
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            if (customer.phoneNumber != null &&
-                                customer.phoneNumber!.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 4.0),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.phone, size: 16),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      customer.phoneNumber!,
-                                      style: Theme.of(context).textTheme.bodyMedium,
-                                    ),
-                                  ],
+                padding: const EdgeInsets.all(16),
+                itemCount: _customers.length,
+                itemBuilder: (context, index) {
+                  final customer = _customers[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  customer.name,
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
                               ),
-                            if (customer.address != null &&
-                                customer.address!.isNotEmpty)
                               Row(
                                 children: [
-                                  const Icon(Icons.location_on, size: 16),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      customer.address!,
-                                      style: Theme.of(context).textTheme.bodyMedium,
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.account_balance_wallet,
                                     ),
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/customer_debts',
+                                        arguments: customer,
+                                      );
+                                    },
+                                    color: Colors.amber.shade700,
+                                    tooltip: 'View Debts',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed:
+                                        () => _showCustomerForm(customer),
+                                    color: Colors.blue,
+                                    tooltip: 'Edit',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () => _deleteCustomer(customer),
+                                    color: Colors.red,
+                                    tooltip: 'Delete',
                                   ),
                                 ],
                               ),
-                          ],
-                        ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          if (customer.phoneNumber != null &&
+                              customer.phoneNumber!.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 4.0),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.phone, size: 16),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    customer.phoneNumber!,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (customer.address != null &&
+                              customer.address!.isNotEmpty)
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on, size: 16),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    customer.address!,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCustomerForm(),
         backgroundColor: Colors.amber.shade700,
@@ -179,12 +181,15 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   Future<void> _showCustomerForm([Customer? customer]) async {
-    final TextEditingController nameController =
-        TextEditingController(text: customer?.name ?? '');
-    final TextEditingController phoneController =
-        TextEditingController(text: customer?.phoneNumber ?? '');
-    final TextEditingController addressController =
-        TextEditingController(text: customer?.address ?? '');
+    final TextEditingController nameController = TextEditingController(
+      text: customer?.name ?? '',
+    );
+    final TextEditingController phoneController = TextEditingController(
+      text: customer?.phoneNumber ?? '',
+    );
+    final TextEditingController addressController = TextEditingController(
+      text: customer?.address ?? '',
+    );
 
     final formKey = GlobalKey<FormState>();
 
@@ -209,9 +214,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
             children: [
               Text(
                 customer == null ? 'Add New Customer' : 'Edit Customer',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -242,16 +247,18 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
                     Navigator.pop(context);
-                    
+
                     final Customer newCustomer = Customer(
                       id: customer?.id,
                       name: nameController.text,
-                      phoneNumber: phoneController.text.isEmpty
-                          ? null
-                          : phoneController.text,
-                      address: addressController.text.isEmpty
-                          ? null
-                          : addressController.text,
+                      phoneNumber:
+                          phoneController.text.isEmpty
+                              ? null
+                              : phoneController.text,
+                      address:
+                          addressController.text.isEmpty
+                              ? null
+                              : addressController.text,
                     );
 
                     try {
@@ -259,20 +266,21 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         await _databaseService.insertCustomer(newCustomer);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Customer added successfully')),
+                            content: Text('Customer added successfully'),
+                          ),
                         );
                       } else {
                         await _databaseService.updateCustomer(newCustomer);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Customer updated successfully')),
+                            content: Text('Customer updated successfully'),
+                          ),
                         );
                       }
                       _loadCustomers();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Error saving customer: $e')),
+                        SnackBar(content: Text('Error saving customer: $e')),
                       );
                     }
                   }
@@ -295,24 +303,31 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   Future<void> _deleteCustomer(Customer customer) async {
-    final bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Customer'),
-        content: Text(
-            'Are you sure you want to delete ${customer.name}? This action cannot be undone and will remove all associated debts.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ) ?? false;
+    final bool confirm =
+        await showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Delete Customer'),
+                content: Text(
+                  'Are you sure you want to delete ${customer.name}? This action cannot be undone and will remove all associated debts.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
 
     if (confirm && customer.id != null) {
       try {

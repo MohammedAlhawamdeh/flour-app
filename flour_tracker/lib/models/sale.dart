@@ -57,7 +57,11 @@ class Sale {
     };
   }
 
-  factory Sale.fromMap(Map<String, dynamic> map, FlourProduct product, [Customer? customer]) {
+  factory Sale.fromMap(
+    Map<String, dynamic> map,
+    FlourProduct product, [
+    Customer? customer,
+  ]) {
     return Sale(
       id: map['id'],
       product: product,

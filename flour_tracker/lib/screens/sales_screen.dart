@@ -38,9 +38,9 @@ class _SalesScreenState extends State<SalesScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading sales: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading sales: $e')));
       }
     } finally {
       setState(() {
@@ -52,153 +52,154 @@ class _SalesScreenState extends State<SalesScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sales Management'),
         backgroundColor: Colors.amber.shade700,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _sales.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _sales.isEmpty
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.point_of_sale_outlined,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No sales found',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Record a sale to get started',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.point_of_sale_outlined,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No sales found',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Record a sale to get started',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _sales.length,
-                  itemBuilder: (context, index) {
-                    final sale = _sales[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Sale #${sale.id}',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                padding: const EdgeInsets.all(16),
+                itemCount: _sales.length,
+                itemBuilder: (context, index) {
+                  final sale = _sales[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Sale #${sale.id}',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color:
+                                      sale.isPaid
+                                          ? Colors.green.shade100
+                                          : Colors.red.shade100,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  sale.isPaid ? 'Paid' : 'Unpaid',
+                                  style: TextStyle(
+                                    color:
+                                        sale.isPaid
+                                            ? Colors.green.shade800
+                                            : Colors.red.shade800,
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: sale.isPaid
-                                        ? Colors.green.shade100
-                                        : Colors.red.shade100,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    sale.isPaid ? 'Paid' : 'Unpaid',
-                                    style: TextStyle(
-                                      color: sale.isPaid
-                                          ? Colors.green.shade800
-                                          : Colors.red.shade800,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Product: ${sale.product.name}',
-                              style: Theme.of(context).textTheme.bodyLarge,
-                            ),
-                            Text(
-                              'Date: ${DateFormat('MMM dd, yyyy').format(sale.date)}',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Quantity',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${sale.quantity.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Price',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey.shade600,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${settingsProvider.currencySymbol}${sale.totalPrice.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (sale.customer != null) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Customer: ${sale.customer!.name}',
-                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Product: ${sale.product.name}',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          Text(
+                            'Date: ${DateFormat('MMM dd, yyyy').format(sale.date)}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Quantity',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${sale.quantity.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Price',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      '${settingsProvider.currencySymbol}${sale.totalPrice.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (sale.customer != null) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Customer: ${sale.customer!.name}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                           ],
-                        ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showSaleForm(),
         backgroundColor: Colors.amber.shade700,
@@ -210,12 +211,13 @@ class _SalesScreenState extends State<SalesScreen> {
   Future<void> _showSaleForm() async {
     final products = await _databaseService.getProducts();
     final customers = await _databaseService.getCustomers();
-    
+
     if (products.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('Please add flour products before recording a sale')),
+            content: Text('Please add flour products before recording a sale'),
+          ),
         );
       }
       return;
@@ -223,10 +225,10 @@ class _SalesScreenState extends State<SalesScreen> {
 
     FlourProduct? selectedProduct = products.isNotEmpty ? products[0] : null;
     Customer? selectedCustomer;
-    
+
     final quantityController = TextEditingController();
     final isPaidController = ValueNotifier<bool>(true);
-    
+
     final formKey = GlobalKey<FormState>();
 
     await showModalBottomSheet(
@@ -253,8 +255,8 @@ class _SalesScreenState extends State<SalesScreen> {
                   Text(
                     'Record New Sale',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 16),
@@ -269,14 +271,19 @@ class _SalesScreenState extends State<SalesScreen> {
                             labelText: 'Select Product',
                             border: OutlineInputBorder(),
                             contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 16),
+                              horizontal: 16,
+                              vertical: 16,
+                            ),
                           ),
-                          items: products.map((product) {
-                            return DropdownMenuItem<FlourProduct>(
-                              value: product,
-                              child: Text('${product.name} - ${Provider.of<SettingsProvider>(context).currencySymbol}${product.pricePerKg}/kg (${product.quantityInStock.toStringAsFixed(Provider.of<SettingsProvider>(context).showDecimals ? 2 : 0)} kg in stock)'),
-                            );
-                          }).toList(),
+                          items:
+                              products.map((product) {
+                                return DropdownMenuItem<FlourProduct>(
+                                  value: product,
+                                  child: Text(
+                                    '${product.name} - ${Provider.of<SettingsProvider>(context).currencySymbol}${product.pricePerKg}/kg (${product.quantityInStock.toStringAsFixed(Provider.of<SettingsProvider>(context).showDecimals ? 2 : 0)} kg in stock)',
+                                  ),
+                                );
+                              }).toList(),
                           onChanged: (product) {
                             setState(() {
                               selectedProduct = product;
@@ -290,7 +297,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           },
                         ),
                         const SizedBox(height: 16),
-                        
+
                         // Quantity TextField
                         CustomTextField(
                           label: 'Quantity (kg)',
@@ -304,13 +311,14 @@ class _SalesScreenState extends State<SalesScreen> {
                             if (quantity == null) {
                               return 'Please enter a valid number';
                             }
-                            if (selectedProduct != null && quantity > selectedProduct!.quantityInStock) {
+                            if (selectedProduct != null &&
+                                quantity > selectedProduct!.quantityInStock) {
                               return 'Not enough stock available';
                             }
                             return null;
                           },
                         ),
-                        
+
                         // Customer Dropdown (Optional)
                         if (customers.isNotEmpty)
                           DropdownButtonFormField<Customer?>(
@@ -319,7 +327,9 @@ class _SalesScreenState extends State<SalesScreen> {
                               labelText: 'Select Customer (Optional)',
                               border: OutlineInputBorder(),
                               contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 16),
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
                             ),
                             items: [
                               const DropdownMenuItem<Customer?>(
@@ -339,15 +349,18 @@ class _SalesScreenState extends State<SalesScreen> {
                               });
                             },
                           ),
-                        
+
                         // Payment Status Switch
                         ValueListenableBuilder<bool>(
                           valueListenable: isPaidController,
                           builder: (context, isPaid, _) {
                             return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   const Text('Payment Status:'),
                                   Row(
@@ -373,12 +386,16 @@ class _SalesScreenState extends State<SalesScreen> {
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () async {
-                      if (formKey.currentState!.validate() && selectedProduct != null) {
+                      if (formKey.currentState!.validate() &&
+                          selectedProduct != null) {
                         Navigator.pop(context);
-                        
-                        final double quantity = double.parse(quantityController.text);
-                        final double totalPrice = quantity * selectedProduct!.pricePerKg;
-                        
+
+                        final double quantity = double.parse(
+                          quantityController.text,
+                        );
+                        final double totalPrice =
+                            quantity * selectedProduct!.pricePerKg;
+
                         final Sale newSale = Sale(
                           product: selectedProduct!,
                           customer: selectedCustomer,
@@ -395,14 +412,16 @@ class _SalesScreenState extends State<SalesScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                  content: Text('Sale recorded successfully')),
+                                content: Text('Sale recorded successfully'),
+                              ),
                             );
                           }
                         } catch (e) {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                  content: Text('Error recording sale: $e')),
+                                content: Text('Error recording sale: $e'),
+                              ),
                             );
                           }
                         }

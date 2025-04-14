@@ -24,7 +24,7 @@ class DatabaseService {
       try {
         // The sqlite3_flutter_libs package is imported but doesn't need explicit initialization
         // It automatically makes the SQLite library available when imported
-        
+
         // Initialize FFI for desktop
         sqfliteFfiInit();
         databaseFactory = databaseFactoryFfi;
@@ -38,21 +38,17 @@ class DatabaseService {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    
+
     // Ensure database factory is initialized
     await initializeDatabaseFactory();
-    
+
     _database = await _initDatabase();
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'flour_tracker.db');
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDatabase,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDatabase);
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -145,11 +141,7 @@ class DatabaseService {
 
   Future<int> deleteProduct(int id) async {
     final db = await database;
-    return await db.delete(
-      'products',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('products', where: 'id = ?', whereArgs: [id]);
   }
 
   // Customer CRUD Operations
@@ -191,17 +183,13 @@ class DatabaseService {
 
   Future<int> deleteCustomer(int id) async {
     final db = await database;
-    return await db.delete(
-      'customers',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('customers', where: 'id = ?', whereArgs: [id]);
   }
 
   // Sales CRUD Operations
   Future<int> insertSale(Sale sale) async {
     final db = await database;
-    
+
     // Update inventory
     if (sale.product.id != null) {
       FlourProduct? product = await getProduct(sale.product.id!);
@@ -218,14 +206,14 @@ class DatabaseService {
         );
       }
     }
-    
+
     return await db.insert('sales', sale.toMap());
   }
 
   Future<List<Sale>> getSales() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('sales');
-    
+
     List<Sale> salesList = [];
     for (var map in maps) {
       final FlourProduct? product = await getProduct(map['productId']);
@@ -233,12 +221,12 @@ class DatabaseService {
       if (map['customerId'] != null) {
         customer = await getCustomer(map['customerId']);
       }
-      
+
       if (product != null) {
         salesList.add(Sale.fromMap(map, product, customer));
       }
     }
-    
+
     return salesList;
   }
 
@@ -251,17 +239,17 @@ class DatabaseService {
   Future<List<Debt>> getDebts() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query('debts');
-    
+
     List<Debt> debtsList = [];
     for (var map in maps) {
       final Customer? customer = await getCustomer(map['customerId']);
       final FlourProduct? product = await getProduct(map['productId']);
-      
+
       if (customer != null && product != null) {
         debtsList.add(Debt.fromMap(map, customer, product));
       }
     }
-    
+
     return debtsList;
   }
 
@@ -272,17 +260,17 @@ class DatabaseService {
       where: 'customerId = ?',
       whereArgs: [customerId],
     );
-    
+
     List<Debt> debtsList = [];
     for (var map in maps) {
       final Customer? customer = await getCustomer(map['customerId']);
       final FlourProduct? product = await getProduct(map['productId']);
-      
+
       if (customer != null && product != null) {
         debtsList.add(Debt.fromMap(map, customer, product));
       }
     }
-    
+
     return debtsList;
   }
 
@@ -290,10 +278,7 @@ class DatabaseService {
     final db = await database;
     return await db.update(
       'debts',
-      {
-        'isPaid': 1,
-        'paidDate': DateTime.now().toIso8601String(),
-      },
+      {'isPaid': 1, 'paidDate': DateTime.now().toIso8601String()},
       where: 'id = ?',
       whereArgs: [debtId],
     );
@@ -316,11 +301,7 @@ class DatabaseService {
 
   Future<int> deleteDebt(int id) async {
     final db = await database;
-    return await db.delete(
-      'debts',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete('debts', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> clearAllData() async {

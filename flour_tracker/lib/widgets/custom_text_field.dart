@@ -29,14 +29,19 @@ class CustomTextField extends StatelessWidget {
         decoration: InputDecoration(
           labelText: label,
           border: const OutlineInputBorder(),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
-        validator: validator ?? (value) {
-          if (isRequired && (value == null || value.isEmpty)) {
-            return '$label is required';
-          }
-          return null;
-        },
+        validator:
+            validator ??
+            (value) {
+              if (isRequired && (value == null || value.isEmpty)) {
+                return '$label is required';
+              }
+              return null;
+            },
       ),
     );
   }

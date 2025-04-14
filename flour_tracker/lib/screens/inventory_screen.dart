@@ -34,9 +34,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
         _products = products;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading products: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading products: $e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -47,109 +47,108 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsProvider = Provider.of<SettingsProvider>(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Inventory Management'),
         backgroundColor: Colors.amber.shade700,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _products.isEmpty
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _products.isEmpty
               ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.inventory_2_outlined,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No flour products found',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Add a product to get started',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                )
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 80,
+                      color: Colors.grey,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No flour products found',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add a product to get started',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _products.length,
-                  itemBuilder: (context, index) {
-                    final product = _products[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    product.name,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleLarge
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                padding: const EdgeInsets.all(16),
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  product.name,
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    onPressed: () => _showProductForm(product),
+                                    color: Colors.blue,
                                   ),
-                                ),
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () => _showProductForm(product),
-                                      color: Colors.blue,
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => _deleteProduct(product),
-                                      color: Colors.red,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                _buildInfoItem(
-                                  'Price per Kg',
-                                  '${settingsProvider.currencySymbol}${product.pricePerKg.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
-                                  _getCurrencyIcon(settingsProvider.currencySymbol),
-                                ),
-                                const SizedBox(width: 16),
-                                _buildInfoItem(
-                                  'Quantity in Stock',
-                                  '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
-                                  Icons.inventory,
-                                ),
-                              ],
-                            ),
-                            if (product.description != null &&
-                                product.description!.isNotEmpty) ...[
-                              const SizedBox(height: 8),
-                              Text(
-                                'Description: ${product.description}',
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                  IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () => _deleteProduct(product),
+                                    color: Colors.red,
+                                  ),
+                                ],
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              _buildInfoItem(
+                                'Price per Kg',
+                                '${settingsProvider.currencySymbol}${product.pricePerKg.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
+                                _getCurrencyIcon(
+                                  settingsProvider.currencySymbol,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              _buildInfoItem(
+                                'Quantity in Stock',
+                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
+                                Icons.inventory,
+                              ),
+                            ],
+                          ),
+                          if (product.description != null &&
+                              product.description!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Description: ${product.description}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
                           ],
-                        ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
+              ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showProductForm(),
         backgroundColor: Colors.amber.shade700,
@@ -162,11 +161,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return Expanded(
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 20,
-            color: Colors.amber.shade700,
-          ),
+          Icon(icon, size: 20, color: Colors.amber.shade700),
           const SizedBox(width: 4),
           Expanded(
             child: Column(
@@ -174,10 +169,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
                 Text(
                   value,
@@ -212,14 +204,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _showProductForm([FlourProduct? product]) async {
-    final TextEditingController nameController =
-        TextEditingController(text: product?.name ?? '');
+    final TextEditingController nameController = TextEditingController(
+      text: product?.name ?? '',
+    );
     final TextEditingController priceController = TextEditingController(
-        text: product?.pricePerKg.toString() ?? '');
+      text: product?.pricePerKg.toString() ?? '',
+    );
     final TextEditingController quantityController = TextEditingController(
-        text: product?.quantityInStock.toString() ?? '');
-    final TextEditingController descriptionController =
-        TextEditingController(text: product?.description ?? '');
+      text: product?.quantityInStock.toString() ?? '',
+    );
+    final TextEditingController descriptionController = TextEditingController(
+      text: product?.description ?? '',
+    );
 
     final formKey = GlobalKey<FormState>();
 
@@ -244,9 +240,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
             children: [
               Text(
                 product == null ? 'Add New Product' : 'Edit Product',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -299,15 +295,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 onPressed: () async {
                   if (formKey.currentState!.validate()) {
                     Navigator.pop(context);
-                    
+
                     final FlourProduct newProduct = FlourProduct(
                       id: product?.id,
                       name: nameController.text,
                       pricePerKg: double.parse(priceController.text),
                       quantityInStock: double.parse(quantityController.text),
-                      description: descriptionController.text.isEmpty
-                          ? null
-                          : descriptionController.text,
+                      description:
+                          descriptionController.text.isEmpty
+                              ? null
+                              : descriptionController.text,
                     );
 
                     try {
@@ -315,20 +312,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         await _databaseService.insertProduct(newProduct);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Product added successfully')),
+                            content: Text('Product added successfully'),
+                          ),
                         );
                       } else {
                         await _databaseService.updateProduct(newProduct);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Product updated successfully')),
+                            content: Text('Product updated successfully'),
+                          ),
                         );
                       }
                       _loadProducts();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text('Error saving product: $e')),
+                        SnackBar(content: Text('Error saving product: $e')),
                       );
                     }
                   }
@@ -351,24 +349,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
   }
 
   Future<void> _deleteProduct(FlourProduct product) async {
-    final bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Product'),
-        content: Text(
-            'Are you sure you want to delete ${product.name}? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    ) ?? false;
+    final bool confirm =
+        await showDialog(
+          context: context,
+          builder:
+              (context) => AlertDialog(
+                title: const Text('Delete Product'),
+                content: Text(
+                  'Are you sure you want to delete ${product.name}? This action cannot be undone.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      'Delete',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+        ) ??
+        false;
 
     if (confirm && product.id != null) {
       try {
@@ -381,9 +386,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting product: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error deleting product: $e')));
         }
       }
     }

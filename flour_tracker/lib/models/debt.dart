@@ -75,7 +75,8 @@ class Debt {
       amount: map['amount'],
       date: DateTime.parse(map['date']),
       isPaid: map['isPaid'] == 1,
-      paidDate: map['paidDate'] != null ? DateTime.parse(map['paidDate']) : null,
+      paidDate:
+          map['paidDate'] != null ? DateTime.parse(map['paidDate']) : null,
       description: map['description'],
     );
   }

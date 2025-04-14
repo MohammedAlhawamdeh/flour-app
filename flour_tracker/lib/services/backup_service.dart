@@ -36,7 +36,8 @@ class BackupService {
       // Save to a file in the app's documents directory
       final directory = await getApplicationDocumentsDirectory();
       final dateFormat = DateFormat('yyyyMMdd_HHmmss');
-      final fileName = 'flour_tracker_backup_${dateFormat.format(DateTime.now())}.json';
+      final fileName =
+          'flour_tracker_backup_${dateFormat.format(DateTime.now())}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonData);
 
@@ -85,12 +86,17 @@ class BackupService {
       final directory = await getApplicationDocumentsDirectory();
       final dir = Directory(directory.path);
       final List<FileSystemEntity> entities = await dir.list().toList();
-      final backupFiles = entities
-          .whereType<File>()
-          .where((file) => file.path.contains('flour_tracker_backup_') && file.path.endsWith('.json'))
-          .map((file) => file.path)
-          .toList();
-      
+      final backupFiles =
+          entities
+              .whereType<File>()
+              .where(
+                (file) =>
+                    file.path.contains('flour_tracker_backup_') &&
+                    file.path.endsWith('.json'),
+              )
+              .map((file) => file.path)
+              .toList();
+
       return backupFiles;
     } catch (e) {
       throw Exception('Failed to get available backups: $e');

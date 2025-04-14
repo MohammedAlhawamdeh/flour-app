@@ -4,12 +4,7 @@ class Customer {
   final String? phoneNumber;
   final String? address;
 
-  Customer({
-    this.id,
-    required this.name,
-    this.phoneNumber,
-    this.address,
-  });
+  Customer({this.id, required this.name, this.phoneNumber, this.address});
 
   Customer copyWith({
     int? id,

@@ -17,10 +17,10 @@ import 'package:flour_tracker/providers/settings_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize database factory for desktop platforms
   await DatabaseService.initializeDatabaseFactory();
-  
+
   runApp(
     MultiProvider(
       providers: [
@@ -39,10 +39,10 @@ class FlourTrackerApp extends StatelessWidget {
   Widget build(BuildContext context) {
     // Listen for theme changes
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return MaterialApp(
       title: 'Flour Tracker',
-      debugShowCheckedModeBanner: false,  // Disable debug banner for release
+      debugShowCheckedModeBanner: false, // Disable debug banner for release
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
         useMaterial3: true,
