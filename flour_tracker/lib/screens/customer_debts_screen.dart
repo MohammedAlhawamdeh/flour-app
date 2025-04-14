@@ -60,6 +60,17 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
 
   Future<void> _addDebt(Debt debt) async {
     try {
+      // First, ensure the product exists in the database
+      final existingProduct = await _databaseService.getProduct(
+        debt.product.id!,
+      );
+
+      if (existingProduct == null) {
+        // The product doesn't exist yet, so insert it
+        await _databaseService.insertProduct(debt.product);
+      }
+
+      // Now add the debt
       await _databaseService.addDebt(debt);
       _loadDebts(); // Reload the list after adding
       if (mounted) {
@@ -166,6 +177,12 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
     DateTime selectedDate = isEditing ? debtToEdit.date : DateTime.now();
     bool isPaid = isEditing ? debtToEdit.isPaid : false;
 
+    // For product selection
+    FlourProduct? selectedProduct = isEditing ? debtToEdit.product : null;
+    bool isCreatingNewProduct = selectedProduct == null;
+    List<FlourProduct> existingProducts = [];
+    bool isLoadingProducts = true;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -173,6 +190,32 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
         return StatefulBuilder(
           builder: (context, setState) {
             final settingsProvider = Provider.of<SettingsProvider>(context);
+
+            // Load existing products when the form is shown
+            if (isLoadingProducts) {
+              _databaseService.getProducts().then((products) {
+                setState(() {
+                  existingProducts = products;
+                  isLoadingProducts = false;
+
+                  // If editing, check if the product exists in the list
+                  if (isEditing && selectedProduct != null) {
+                    final existingProduct = products.firstWhere(
+                      (p) => p.id == selectedProduct?.id,
+                      orElse: () => selectedProduct!,
+                    );
+                    selectedProduct = existingProduct;
+
+                    // Update controllers with selected product data
+                    productController.text = selectedProduct!.name;
+                    if (!isCreatingNewProduct) {
+                      priceController.text =
+                          selectedProduct!.pricePerKg.toString();
+                    }
+                  }
+                });
+              });
+            }
 
             return Padding(
               padding: EdgeInsets.only(
@@ -195,17 +238,90 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    CustomTextField(
-                      controller: productController,
-                      label: 'Product Name',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a product name';
-                        }
-                        return null;
-                      },
+
+                    // Product selection section
+                    Row(
+                      children: [
+                        const Text('Product: '),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child:
+                              isLoadingProducts
+                                  ? const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : DropdownButtonFormField<FlourProduct?>(
+                                    decoration: const InputDecoration(
+                                      contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    value: selectedProduct,
+                                    hint: const Text('Select a product'),
+                                    isExpanded: true,
+                                    items: [
+                                      ...existingProducts.map(
+                                        (product) =>
+                                            DropdownMenuItem<FlourProduct>(
+                                              value: product,
+                                              child: Text(product.name),
+                                            ),
+                                      ),
+                                      const DropdownMenuItem<FlourProduct?>(
+                                        value: null,
+                                        child: Text('+ Create new product'),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedProduct = value;
+                                        isCreatingNewProduct = value == null;
+
+                                        if (value != null) {
+                                          // Set product details from selected product
+                                          productController.text = value.name;
+                                          priceController.text =
+                                              value.pricePerKg.toString();
+                                        } else {
+                                          // Clear fields for new product
+                                          productController.text = '';
+                                          priceController.text = '';
+                                        }
+                                      });
+                                    },
+                                    validator:
+                                        (value) =>
+                                            (value == null &&
+                                                    productController
+                                                        .text
+                                                        .isEmpty)
+                                                ? 'Please select or create a product'
+                                                : null,
+                                  ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 12),
+
+                    // Only show product name field if creating a new product
+                    if (isCreatingNewProduct)
+                      CustomTextField(
+                        controller: productController,
+                        label: 'New Product Name',
+                        validator: (value) {
+                          if (isCreatingNewProduct &&
+                              (value == null || value.isEmpty)) {
+                            return 'Please enter a product name';
+                          }
+                          return null;
+                        },
+                      ),
+                    if (isCreatingNewProduct) const SizedBox(height: 12),
+
                     Row(
                       children: [
                         Expanded(
@@ -294,21 +410,24 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     ElevatedButton(
                       onPressed: () {
                         if (formKey.currentState!.validate()) {
-                          final product = FlourProduct(
-                            id:
-                                isEditing
-                                    ? debtToEdit.product.id
-                                    : DateTime.now().millisecondsSinceEpoch,
-                            name: productController.text.trim(),
-                            pricePerKg: double.parse(priceController.text),
-                            quantityInStock: double.parse(
-                              quantityController.text,
-                            ),
-                            description:
-                                descriptionController.text.isEmpty
-                                    ? null
-                                    : descriptionController.text.trim(),
-                          );
+                          // Create product - either new or use existing
+                          final product =
+                              isCreatingNewProduct
+                                  ? FlourProduct(
+                                    id: DateTime.now().millisecondsSinceEpoch,
+                                    name: productController.text.trim(),
+                                    pricePerKg: double.parse(
+                                      priceController.text,
+                                    ),
+                                    quantityInStock: double.parse(
+                                      quantityController.text,
+                                    ),
+                                    description:
+                                        descriptionController.text.isEmpty
+                                            ? null
+                                            : descriptionController.text.trim(),
+                                  )
+                                  : selectedProduct!;
 
                           final debt = Debt(
                             id:

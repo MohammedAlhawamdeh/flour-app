@@ -48,7 +48,23 @@ class DatabaseService {
 
   Future<Database> _initDatabase() async {
     String path = join(await getDatabasesPath(), 'flour_tracker.db');
-    return await openDatabase(path, version: 1, onCreate: _createDatabase);
+    return await openDatabase(
+      path,
+      version: 2, // Increase version number from 1 to 2
+      onCreate: _createDatabase,
+      onUpgrade: _upgradeDatabase,
+    );
+  }
+
+  Future<void> _upgradeDatabase(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
+    if (oldVersion < 2) {
+      // Add description column to debts table
+      await db.execute('ALTER TABLE debts ADD COLUMN description TEXT');
+    }
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -96,6 +112,7 @@ class DatabaseService {
         date TEXT NOT NULL,
         isPaid INTEGER NOT NULL DEFAULT 0,
         paidDate TEXT,
+        description TEXT,
         FOREIGN KEY (customerId) REFERENCES customers (id),
         FOREIGN KEY (productId) REFERENCES products (id)
       )
