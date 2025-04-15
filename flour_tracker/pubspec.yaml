@@ -28,7 +28,6 @@ dependencies:
   http: ^1.1.2 # For API calls
   flutter_launcher_icons: ^0.14.3
   # Added for backup functionality
-  file_picker: ^6.1.1 # For selecting files for backup/restore
   share_plus: ^7.2.1 # For sharing backup files
   permission_handler: ^11.1.0 # For requesting storage permissions
 

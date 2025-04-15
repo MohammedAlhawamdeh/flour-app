@@ -44,6 +44,7 @@ class AppTranslations {
       'backupShareText':
           'Use the share button to send your backup to another device or save it to cloud storage.',
       'ok': 'OK',
+      'selectBackup': 'Select Backup to Restore',
 
       // Home screen
       'welcome': 'Welcome to Flour Tracker',
@@ -151,6 +152,7 @@ class AppTranslations {
       'backupShareText':
           'Yedeğinizi başka bir cihaza göndermek veya bulut depolama alanına kaydetmek için paylaş düğmesini kullanın.',
       'ok': 'Tamam',
+      'selectBackup': 'Geri Yüklenecek Yedeği Seçin',
 
       // Home screen
       'welcome': 'Un Takip Sistemine Hoş Geldiniz',
