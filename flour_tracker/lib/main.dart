@@ -10,7 +10,7 @@ import 'package:flour_tracker/screens/debts_screen.dart';
 import 'package:flour_tracker/screens/expenses_screen.dart'; // Add expenses screen
 import 'package:flour_tracker/screens/splash_screen.dart';
 import 'package:flour_tracker/screens/settings_screen.dart';
-import 'package:flour_tracker/screens/backup_restore_screen.dart';
+import 'package:flour_tracker/screens/backup_screen.dart'; // Updated import for backup screen
 import 'package:provider/provider.dart';
 import 'package:flour_tracker/services/database_service.dart';
 import 'package:flour_tracker/providers/theme_provider.dart';
@@ -91,7 +91,7 @@ class FlourTrackerApp extends StatelessWidget {
         '/debts': (context) => const DebtsScreen(),
         '/expenses': (context) => const ExpensesScreen(), // Add expenses route
         '/settings': (context) => const SettingsScreen(),
-        '/backup': (context) => const BackupRestoreScreen(),
+        '/backup': (context) => const BackupScreen(),
       },
       onGenerateRoute: (settings) {
         if (settings.name == '/customer_debts') {

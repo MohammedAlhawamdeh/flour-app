@@ -1,105 +1,206 @@
-import 'dart:convert';
 import 'dart:io';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flour_tracker/models/customer.dart';
-import 'package:flour_tracker/models/flour_product.dart';
-import 'package:flour_tracker/models/sale.dart';
-import 'package:flour_tracker/models/debt.dart';
-import 'package:flour_tracker/services/database_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:sqflite/sqflite.dart'; // Add this import for getDatabasesPath
 
 class BackupService {
-  final DatabaseService _databaseService;
+  static final BackupService _instance = BackupService._internal();
+  factory BackupService() => _instance;
+  BackupService._internal();
 
-  BackupService(this._databaseService);
+  // Get the path to the database file
+  Future<String> getDatabasePath() async {
+    return join(await getDatabasesPath(), 'flour_tracker.db');
+  }
 
-  Future<String> exportData() async {
+  // Create a backup file
+  Future<File> createBackup() async {
+    // Get database path
+    final dbPath = await getDatabasePath();
+    final dbFile = File(dbPath);
+
+    // Check if database exists
+    if (!await dbFile.exists()) {
+      throw Exception('Database file not found');
+    }
+
+    // Create backup file name with timestamp
+    final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final backupFileName = 'flour_tracker_backup_$timestamp.db';
+
+    // Get directory for backup
+    Directory? backupDir;
+    if (Platform.isAndroid) {
+      // On Android, use the downloads directory
+      backupDir = await getExternalStorageDirectory();
+    } else if (Platform.isIOS) {
+      // On iOS, use the documents directory
+      backupDir = await getApplicationDocumentsDirectory();
+    } else {
+      // On desktop, use the downloads directory
+      backupDir = await getDownloadsDirectory();
+    }
+
+    if (backupDir == null) {
+      throw Exception('Could not find a suitable directory for backup');
+    }
+
+    // Create backup directory if it doesn't exist
+    final backupPath = join(backupDir.path, 'flour_tracker_backups');
+    final backupDirObj = Directory(backupPath);
+    if (!await backupDirObj.exists()) {
+      await backupDirObj.create(recursive: true);
+    }
+
+    // Create the backup file path
+    final backupFilePath = join(backupPath, backupFileName);
+
+    // Copy the database file to the backup location
+    final backupFile = await dbFile.copy(backupFilePath);
+
+    return backupFile;
+  }
+
+  // Share the backup file
+  Future<void> shareBackup(File backupFile) async {
     try {
-      // Get all data from the database
-      final products = await _databaseService.getProducts();
-      final customers = await _databaseService.getCustomers();
-      final sales = await _databaseService.getSales();
-      final debts = await _databaseService.getDebts();
-
-      // Create a backup object with all data
-      final backupData = {
-        'timestamp': DateTime.now().toIso8601String(),
-        'products': products.map((product) => product.toMap()).toList(),
-        'customers': customers.map((customer) => customer.toMap()).toList(),
-        'sales': sales.map((sale) => sale.toMap()).toList(),
-        'debts': debts.map((debt) => debt.toMap()).toList(),
-      };
-
-      // Convert to JSON
-      final jsonData = jsonEncode(backupData);
-
-      // Save to a file in the app's documents directory
-      final directory = await getApplicationDocumentsDirectory();
-      final dateFormat = DateFormat('yyyyMMdd_HHmmss');
-      final fileName =
-          'flour_tracker_backup_${dateFormat.format(DateTime.now())}.json';
-      final file = File('${directory.path}/$fileName');
-      await file.writeAsString(jsonData);
-
-      return file.path;
+      final filePath = backupFile.path;
+      await Share.shareXFiles(
+        [XFile(filePath)],
+        subject: 'Flour Tracker Database Backup',
+        text: 'Here is your Flour Tracker backup file. Keep it safe!',
+      );
     } catch (e) {
-      throw Exception('Failed to export data: $e');
+      throw Exception('Failed to share backup: $e');
     }
   }
 
-  Future<bool> importData(String filePath) async {
+  // Restore from a backup file
+  Future<bool> restoreBackup() async {
     try {
-      // Read the backup file
-      final file = File(filePath);
-      final jsonData = await file.readAsString();
-      final backupData = jsonDecode(jsonData);
-
-      // Clear all existing data
-      await _databaseService.clearAllData();
-
-      // Import products
-      final productsList = backupData['products'] as List;
-      for (var productMap in productsList) {
-        final product = FlourProduct.fromMap(productMap);
-        await _databaseService.insertProduct(product);
+      // Request storage permission
+      if (Platform.isAndroid) {
+        var status = await Permission.storage.request();
+        if (!status.isGranted) {
+          throw Exception('Storage permission denied');
+        }
       }
 
-      // Import customers
-      final customersList = backupData['customers'] as List;
-      for (var customerMap in customersList) {
-        final customer = Customer.fromMap(customerMap);
-        await _databaseService.insertCustomer(customer);
+      // Let user pick the backup file
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['db'],
+        dialogTitle: 'Select Flour Tracker backup file',
+      );
+
+      if (result == null || result.files.isEmpty) {
+        // User canceled the picker
+        return false;
       }
 
-      // Import sales and debts
-      // Note: We would need to handle relationships carefully here
-      // This is a simplified version
+      final pickedFile = result.files.first;
 
-      return true;
+      if (Platform.isAndroid || Platform.isIOS) {
+        if (pickedFile.path == null) {
+          throw Exception('Could not get path from picked file');
+        }
+
+        final sourcePath = pickedFile.path!;
+        final sourceFile = File(sourcePath);
+
+        // Copy to database location
+        final dbPath = await getDatabasePath();
+        final dbFile = File(dbPath);
+
+        // Make sure we close any open database connections
+        // This will be handled by restarting the app after restore
+
+        // Copy the backup file to the database location
+        await sourceFile.copy(dbPath);
+
+        return true;
+      } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        if (pickedFile.path == null) {
+          throw Exception('Could not get path from picked file');
+        }
+
+        final sourcePath = pickedFile.path!;
+        final sourceFile = File(sourcePath);
+
+        // Copy to database location
+        final dbPath = await getDatabasePath();
+
+        // Copy the backup file to the database location
+        await sourceFile.copy(dbPath);
+
+        return true;
+      }
+
+      return false;
     } catch (e) {
-      throw Exception('Failed to import data: $e');
+      debugPrint('Error restoring backup: $e');
+      rethrow;
     }
   }
 
-  Future<List<String>> getAvailableBackups() async {
+  // List available backups
+  Future<List<File>> listBackups() async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final dir = Directory(directory.path);
-      final List<FileSystemEntity> entities = await dir.list().toList();
-      final backupFiles =
-          entities
-              .whereType<File>()
-              .where(
-                (file) =>
-                    file.path.contains('flour_tracker_backup_') &&
-                    file.path.endsWith('.json'),
-              )
-              .map((file) => file.path)
+      Directory? backupDir;
+      if (Platform.isAndroid) {
+        backupDir = await getExternalStorageDirectory();
+      } else if (Platform.isIOS) {
+        backupDir = await getApplicationDocumentsDirectory();
+      } else {
+        backupDir = await getDownloadsDirectory();
+      }
+
+      if (backupDir == null) {
+        throw Exception('Could not find backup directory');
+      }
+
+      final backupPath = join(backupDir.path, 'flour_tracker_backups');
+      final backupDirObj = Directory(backupPath);
+
+      if (!await backupDirObj.exists()) {
+        return [];
+      }
+
+      final files =
+          await backupDirObj
+              .list()
+              .where((entity) => entity is File && entity.path.endsWith('.db'))
+              .map((entity) => entity as File)
               .toList();
 
-      return backupFiles;
+      // Sort by creation date (newest first)
+      files.sort(
+        (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+      );
+
+      return files;
     } catch (e) {
-      throw Exception('Failed to get available backups: $e');
+      debugPrint('Error listing backups: $e');
+      return [];
+    }
+  }
+
+  // Delete a backup file
+  Future<bool> deleteBackup(File backupFile) async {
+    try {
+      if (await backupFile.exists()) {
+        await backupFile.delete();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      debugPrint('Error deleting backup: $e');
+      return false;
     }
   }
 }

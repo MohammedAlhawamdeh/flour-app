@@ -16,6 +16,35 @@ class AppTranslations {
       'settings': 'Settings',
       'backup': 'Backup & Restore',
 
+      // Backup screen
+      'backupCreated': 'Backup created successfully',
+      'backupFailed': 'Failed to create backup',
+      'restoreSuccessTitle': 'Restore Successful',
+      'restoreSuccessMessage':
+          'Your data has been restored successfully. The app will now restart to apply the changes.',
+      'restoreFailed': 'Failed to restore backup',
+      'shareFailed': 'Failed to share backup',
+      'confirmDeleteBackup': 'Delete Backup',
+      'deleteBackupMessage':
+          'Are you sure you want to delete this backup? This action cannot be undone.',
+      'delete': 'Delete',
+      'backupDeleted': 'Backup deleted successfully',
+      'deleteFailed': 'Failed to delete backup',
+      'errorOccurred': 'An Error Occurred',
+      'tryAgain': 'Try Again',
+      'createBackup': 'Create Backup',
+      'restoreBackup': 'Restore Backup',
+      'availableBackups': 'Available Backups',
+      'noBackupsFound': 'No backups found. Create one now!',
+      'shareBackup': 'Share Backup',
+      'deleteBackup': 'Delete Backup',
+      'backupInfo': 'Backup Information',
+      'backupInfoText':
+          'Backups save all your data including products, customers, sales, and debts. You can restore from a backup if you lose your device or need to transfer data.',
+      'backupShareText':
+          'Use the share button to send your backup to another device or save it to cloud storage.',
+      'ok': 'OK',
+
       // Home screen
       'welcome': 'Welcome to Flour Tracker',
       'welcomeSubtitle': 'Manage your flour business from one place',
@@ -93,6 +122,35 @@ class AppTranslations {
       'expenses': 'Giderler',
       'settings': 'Ayarlar',
       'backup': 'Yedekleme & Geri Yükleme',
+
+      // Backup screen
+      'backupCreated': 'Yedekleme başarıyla oluşturuldu',
+      'backupFailed': 'Yedekleme oluşturulamadı',
+      'restoreSuccessTitle': 'Geri Yükleme Başarılı',
+      'restoreSuccessMessage':
+          'Verileriniz başarıyla geri yüklendi. Değişiklikleri uygulamak için uygulama şimdi yeniden başlatılacak.',
+      'restoreFailed': 'Yedekten geri yükleme başarısız oldu',
+      'shareFailed': 'Yedek paylaşılamadı',
+      'confirmDeleteBackup': 'Yedeği Sil',
+      'deleteBackupMessage':
+          'Bu yedeği silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      'delete': 'Sil',
+      'backupDeleted': 'Yedek başarıyla silindi',
+      'deleteFailed': 'Yedek silinemedi',
+      'errorOccurred': 'Bir Hata Oluştu',
+      'tryAgain': 'Tekrar Deneyin',
+      'createBackup': 'Yedek Oluştur',
+      'restoreBackup': 'Yedeği Geri Yükle',
+      'availableBackups': 'Mevcut Yedekler',
+      'noBackupsFound': 'Yedek bulunamadı. Şimdi bir tane oluşturun!',
+      'shareBackup': 'Yedeği Paylaş',
+      'deleteBackup': 'Yedeği Sil',
+      'backupInfo': 'Yedekleme Bilgisi',
+      'backupInfoText':
+          'Yedekler, ürünler, müşteriler, satışlar ve borçlar dahil tüm verilerinizi kaydeder. Cihazınızı kaybederseniz veya verileri aktarmanız gerekirse bir yedekten geri yükleyebilirsiniz.',
+      'backupShareText':
+          'Yedeğinizi başka bir cihaza göndermek veya bulut depolama alanına kaydetmek için paylaş düğmesini kullanın.',
+      'ok': 'Tamam',
 
       // Home screen
       'welcome': 'Un Takip Sistemine Hoş Geldiniz',
