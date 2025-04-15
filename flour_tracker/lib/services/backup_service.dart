@@ -6,11 +6,14 @@ import 'package:share_plus/share_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:flour_tracker/services/database_service.dart';
 
 class BackupService {
   static final BackupService _instance = BackupService._internal();
   factory BackupService() => _instance;
   BackupService._internal();
+
+  final DatabaseService _databaseService = DatabaseService();
 
   // Get the path to the database file
   Future<String> getDatabasePath() async {
@@ -28,6 +31,9 @@ class BackupService {
       throw Exception('Database file not found');
     }
 
+    // Ensure database is properly closed before backup
+    await _databaseService.closeDatabase();
+    
     // Create backup file name with timestamp
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final backupFileName = 'flour_tracker_backup_$timestamp.db';
@@ -98,8 +104,11 @@ class BackupService {
       // Copy to database location
       final dbPath = await getDatabasePath();
       
-      // Make sure no database connections are open
-      await closeDatabase();
+      // Make sure database is properly closed
+      await _databaseService.closeDatabase();
+      
+      // Wait a moment to ensure the database is fully closed
+      await Future.delayed(const Duration(milliseconds: 200));
       
       // Copy the backup file to the database location
       await backupFile.copy(dbPath);
@@ -108,18 +117,6 @@ class BackupService {
     } catch (e) {
       debugPrint('Error restoring backup: $e');
       rethrow;
-    }
-  }
-  
-  // Helper method to close any open database connections
-  Future<void> closeDatabase() async {
-    try {
-      // Get database factory
-      final db = await openDatabase(await getDatabasePath());
-      await db.close();
-    } catch (e) {
-      // Ignore errors, we just want to make sure nothing is using the DB
-      debugPrint('Note: Error closing database: $e');
     }
   }
 

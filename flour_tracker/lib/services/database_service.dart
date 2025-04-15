@@ -17,6 +17,8 @@ class DatabaseService {
   DatabaseService._internal();
 
   static Database? _database;
+  static bool _closing = false;
+  static bool _opening = false;
 
   // Initialize database factory for desktop platforms
   static Future<void> initializeDatabaseFactory() async {
@@ -39,13 +41,57 @@ class DatabaseService {
   }
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
+    if (_closing) {
+      // Wait for closing to complete before trying to open
+      while (_closing) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+    }
+    
+    if (_database != null) {
+      // Check if the database is actually open
+      try {
+        await _database!.rawQuery('SELECT 1');
+        return _database!;
+      } catch (e) {
+        print("Database was closed unexpectedly, reopening: $e");
+        _database = null;
+      }
+    }
 
-    // Ensure database factory is initialized
-    await initializeDatabaseFactory();
+    // Prevent multiple simultaneous opening attempts
+    if (_opening) {
+      // Wait for the database to be opened by another call
+      while (_opening && _database == null) {
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      if (_database != null) return _database!;
+    }
 
-    _database = await _initDatabase();
-    return _database!;
+    _opening = true;
+    try {
+      // Ensure database factory is initialized
+      await initializeDatabaseFactory();
+      _database = await _initDatabase();
+      return _database!;
+    } finally {
+      _opening = false;
+    }
+  }
+
+  Future<void> closeDatabase() async {
+    if (_database != null && !_closing) {
+      _closing = true;
+      try {
+        await _database!.close();
+        _database = null;
+        print("Database closed successfully");
+      } catch (e) {
+        print("Error closing database: $e");
+      } finally {
+        _closing = false;
+      }
+    }
   }
 
   Future<Database> _initDatabase() async {
