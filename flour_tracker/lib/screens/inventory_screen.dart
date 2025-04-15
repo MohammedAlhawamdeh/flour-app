@@ -36,7 +36,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     } catch (e) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error loading products: $e')));
+      ).showSnackBar(SnackBar(content: Text('Ürünler yüklenirken hata: $e')));
     } finally {
       setState(() {
         _isLoading = false;
@@ -50,7 +50,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inventory Management'),
+        title: const Text('Stok Yönetimi'),
         backgroundColor: Colors.amber.shade700,
       ),
       body:
@@ -68,12 +68,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No flour products found',
+                      'Ürün bulunamadı',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Add a product to get started',
+                      'Başlamak için bir ürün ekleyin',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -95,10 +95,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
-                                child: Text(
-                                  product.name,
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product.name,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (product.category != null &&
+                                        product.category!.isNotEmpty)
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 4),
+                                        child: Text(
+                                          product.category!,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.amber.shade900,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                               Row(
@@ -107,11 +128,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                     icon: const Icon(Icons.edit),
                                     onPressed: () => _showProductForm(product),
                                     color: Colors.blue,
+                                    tooltip: 'Düzenle',
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () => _deleteProduct(product),
                                     color: Colors.red,
+                                    tooltip: 'Sil',
                                   ),
                                 ],
                               ),
@@ -121,7 +144,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           Row(
                             children: [
                               _buildInfoItem(
-                                'Price per Kg',
+                                'Kg Başına Fiyat',
                                 '${settingsProvider.currencySymbol}${product.pricePerKg.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
                                 _getCurrencyIcon(
                                   settingsProvider.currencySymbol,
@@ -129,8 +152,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               ),
                               const SizedBox(width: 16),
                               _buildInfoItem(
-                                'Quantity in Stock',
-                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
+                                'Stok Miktarı',
+                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
                                 Icons.inventory,
                               ),
                             ],
@@ -139,7 +162,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               product.description!.isNotEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'Description: ${product.description}',
+                              'Açıklama: ${product.description}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -152,6 +175,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showProductForm(),
         backgroundColor: Colors.amber.shade700,
+        tooltip: 'Ürün Ekle',
         child: const Icon(Icons.add),
       ),
     );
@@ -188,6 +212,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   IconData _getCurrencyIcon(String currencySymbol) {
     switch (currencySymbol) {
+      case '₺':
+        return Icons.currency_lira;
       case '₹':
         return Icons.currency_rupee;
       case '\$':
@@ -217,7 +243,22 @@ class _InventoryScreenState extends State<InventoryScreen> {
       text: product?.description ?? '',
     );
 
+    String selectedCategory = product?.category ?? 'Ekmeklik';
     final formKey = GlobalKey<FormState>();
+
+    // Common Turkish flour categories
+    final List<String> flourCategories = [
+      'Ekmeklik', // Bread flour
+      'Böreklik', // Pastry flour
+      'Poğaçalık', // Biscuit/roll flour
+      'Çöreklik', // Sweet pastry flour
+      'Baklavalik', // Baklava flour
+      'Keklik', // Cake flour
+      'Simitlik', // Bagel flour
+      'Pidecik', // Flatbread flour
+      'Genel Amaçlı', // All-purpose flour
+      'Diğer', // Other
+    ];
 
     await showModalBottomSheet(
       context: context,
@@ -227,122 +268,170 @@ class _InventoryScreenState extends State<InventoryScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 16,
-            left: 16,
-            right: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                product == null ? 'Add New Product' : 'Edit Product',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
+        final settingsProvider = Provider.of<SettingsProvider>(context);
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 16,
+                left: 16,
+                right: 16,
               ),
-              const SizedBox(height: 16),
-              Form(
-                key: formKey,
-                child: Column(
-                  children: [
-                    CustomTextField(
-                      label: 'Product Name',
-                      controller: nameController,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    product == null ? 'Yeni Ürün Ekle' : 'Ürün Düzenle',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
-                    CustomTextField(
-                      label: 'Price per Kg',
-                      controller: priceController,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Price is required';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                    CustomTextField(
-                      label: 'Quantity in Stock (kg)',
-                      controller: quantityController,
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Quantity is required';
-                        }
-                        if (double.tryParse(value) == null) {
-                          return 'Please enter a valid number';
-                        }
-                        return null;
-                      },
-                    ),
-                    CustomTextField(
-                      label: 'Description (Optional)',
-                      controller: descriptionController,
-                      isRequired: false,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () async {
-                  if (formKey.currentState!.validate()) {
-                    Navigator.pop(context);
-
-                    final FlourProduct newProduct = FlourProduct(
-                      id: product?.id,
-                      name: nameController.text,
-                      pricePerKg: double.parse(priceController.text),
-                      quantityInStock: double.parse(quantityController.text),
-                      description:
-                          descriptionController.text.isEmpty
-                              ? null
-                              : descriptionController.text,
-                    );
-
-                    try {
-                      if (product == null) {
-                        await _databaseService.insertProduct(newProduct);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Product added successfully'),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Form(
+                    key: formKey,
+                    child: Column(
+                      children: [
+                        CustomTextField(
+                          label: 'Ürün Adı',
+                          controller: nameController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Ürün adı gerekli';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          decoration: InputDecoration(
+                            labelText: 'Un Kategorisi',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 16,
+                            ),
                           ),
-                        );
-                      } else {
-                        await _databaseService.updateProduct(newProduct);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Product updated successfully'),
+                          value: selectedCategory,
+                          items:
+                              flourCategories
+                                  .map(
+                                    (category) => DropdownMenuItem(
+                                      value: category,
+                                      child: Text(category),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              selectedCategory = value!;
+                            });
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          label:
+                              'Kg Başına Fiyat (${settingsProvider.currencySymbol})',
+                          controller: priceController,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Fiyat gerekli';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Lütfen geçerli bir sayı girin';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          label: 'Stok Miktarı (çuval)',
+                          controller: quantityController,
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Miktar gerekli';
+                            }
+                            if (double.tryParse(value) == null) {
+                              return 'Lütfen geçerli bir sayı girin';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          label: 'Açıklama (İsteğe bağlı)',
+                          controller: descriptionController,
+                          isRequired: false,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (formKey.currentState!.validate()) {
+                        Navigator.pop(context);
+
+                        final FlourProduct newProduct = FlourProduct(
+                          id: product?.id,
+                          name: nameController.text,
+                          pricePerKg: double.parse(priceController.text),
+                          quantityInStock: double.parse(
+                            quantityController.text,
                           ),
+                          description:
+                              descriptionController.text.isEmpty
+                                  ? null
+                                  : descriptionController.text,
+                          category: selectedCategory,
                         );
+
+                        try {
+                          if (product == null) {
+                            await _databaseService.insertProduct(newProduct);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Ürün başarıyla eklendi'),
+                              ),
+                            );
+                          } else {
+                            await _databaseService.updateProduct(newProduct);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Ürün başarıyla güncellendi'),
+                              ),
+                            );
+                          }
+                          _loadProducts();
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Ürün kaydedilirken hata: $e'),
+                            ),
+                          );
+                        }
                       }
-                      _loadProducts();
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving product: $e')),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber.shade700,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: Text(
-                  product == null ? 'Add Product' : 'Update Product',
-                  style: const TextStyle(fontSize: 16),
-                ),
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber.shade700,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(
+                      product == null ? 'Ürün Ekle' : 'Ürünü Güncelle',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -354,19 +443,19 @@ class _InventoryScreenState extends State<InventoryScreen> {
           context: context,
           builder:
               (context) => AlertDialog(
-                title: const Text('Delete Product'),
+                title: const Text('Ürünü Sil'),
                 content: Text(
-                  'Are you sure you want to delete ${product.name}? This action cannot be undone.',
+                  '${product.name} ürününü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: const Text('İptal'),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
                     child: const Text(
-                      'Delete',
+                      'Sil',
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -381,14 +470,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
         _loadProducts();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Product deleted successfully')),
+            const SnackBar(content: Text('Ürün başarıyla silindi')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Error deleting product: $e')));
+          ).showSnackBar(SnackBar(content: Text('Ürün silinirken hata: $e')));
         }
       }
     }

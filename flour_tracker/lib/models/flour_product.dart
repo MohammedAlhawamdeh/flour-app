@@ -4,6 +4,7 @@ class FlourProduct {
   final double pricePerKg;
   final double quantityInStock;
   final String? description;
+  final String? category; // Kategori: ekmeklik, böreklik, etc.
 
   FlourProduct({
     this.id,
@@ -11,7 +12,11 @@ class FlourProduct {
     required this.pricePerKg,
     required this.quantityInStock,
     this.description,
+    this.category,
   });
+
+  // Add a getter for currentStock to avoid breaking existing code
+  double get currentStock => quantityInStock;
 
   FlourProduct copyWith({
     int? id,
@@ -19,6 +24,7 @@ class FlourProduct {
     double? pricePerKg,
     double? quantityInStock,
     String? description,
+    String? category,
   }) {
     return FlourProduct(
       id: id ?? this.id,
@@ -26,6 +32,7 @@ class FlourProduct {
       pricePerKg: pricePerKg ?? this.pricePerKg,
       quantityInStock: quantityInStock ?? this.quantityInStock,
       description: description ?? this.description,
+      category: category ?? this.category,
     );
   }
 
@@ -36,6 +43,7 @@ class FlourProduct {
       'pricePerKg': pricePerKg,
       'quantityInStock': quantityInStock,
       'description': description,
+      'category': category,
     };
   }
 
@@ -46,11 +54,12 @@ class FlourProduct {
       pricePerKg: map['pricePerKg'],
       quantityInStock: map['quantityInStock'],
       description: map['description'],
+      category: map['category'],
     );
   }
 
   @override
   String toString() {
-    return 'FlourProduct(id: $id, name: $name, pricePerKg: $pricePerKg, quantityInStock: $quantityInStock, description: $description)';
+    return 'FlourProduct(id: $id, name: $name, pricePerKg: $pricePerKg, quantityInStock: $quantityInStock, description: $description, category: $category)';
   }
 }

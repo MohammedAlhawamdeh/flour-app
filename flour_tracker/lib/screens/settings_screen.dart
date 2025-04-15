@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flour_tracker/providers/theme_provider.dart';
 import 'package:flour_tracker/providers/settings_provider.dart';
+import 'package:flour_tracker/services/translations_service.dart'; // Import translations
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -36,7 +37,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings'),
+        title: Text(AppTranslations.t(context, 'settingsTitle')),
         backgroundColor: Colors.amber.shade700,
       ),
       body:
@@ -45,10 +46,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  _buildSectionHeader('Appearance'),
+                  _buildSectionHeader(AppTranslations.t(context, 'appearance')),
                   SwitchListTile(
-                    title: const Text('Dark Mode'),
-                    subtitle: const Text('Enable dark theme for the app'),
+                    title: Text(AppTranslations.t(context, 'darkMode')),
+                    subtitle: Text(
+                      AppTranslations.t(context, 'darkModeSubtitle'),
+                    ),
                     value: themeProvider.isDarkMode,
                     onChanged: (value) {
                       themeProvider.toggleTheme(value);
@@ -61,23 +64,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const Divider(),
-                  _buildSectionHeader('Display Options'),
+                  _buildSectionHeader(
+                    AppTranslations.t(context, 'displayOptions'),
+                  ),
                   ListTile(
-                    title: const Text('Currency Symbol'),
+                    title: Text(AppTranslations.t(context, 'currencySymbol')),
                     subtitle: Text(
-                      'Current: ${settingsProvider.currencySymbol}',
+                      '${AppTranslations.t(context, 'current')}: ${settingsProvider.currencySymbol}',
                     ),
                     leading: Icon(
-                      Icons.currency_rupee,
+                      Icons.currency_lira,
                       color: Colors.amber.shade700,
                     ),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () => _showCurrencyDialog(settingsProvider),
                   ),
                   SwitchListTile(
-                    title: const Text('Show Decimal Places'),
-                    subtitle: const Text(
-                      'Display values with two decimal places',
+                    title: Text(AppTranslations.t(context, 'showDecimals')),
+                    subtitle: Text(
+                      AppTranslations.t(context, 'showDecimalsSubtitle'),
                     ),
                     value: settingsProvider.showDecimals,
                     onChanged: (value) {
@@ -88,19 +93,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: Colors.amber.shade700,
                     ),
                   ),
-                  const Divider(),
-                  _buildSectionHeader('Data Management'),
                   ListTile(
-                    title: const Text('Backup & Restore'),
-                    subtitle: const Text('Create backups or restore your data'),
+                    title: Text(AppTranslations.t(context, 'dateFormat')),
+                    subtitle: Text(
+                      '${AppTranslations.t(context, 'current')}: ${settingsProvider.dateFormat}',
+                    ),
+                    leading: Icon(
+                      Icons.calendar_today,
+                      color: Colors.amber.shade700,
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _showDateFormatDialog(settingsProvider),
+                  ),
+                  ListTile(
+                    title: Text(
+                      AppTranslations.t(context, 'languageSelection'),
+                    ),
+                    subtitle: Text(
+                      '${AppTranslations.t(context, 'current')}: ${settingsProvider.language == 'tr' ? AppTranslations.t(context, 'turkish') : AppTranslations.t(context, 'english')}',
+                    ),
+                    leading: Icon(Icons.language, color: Colors.amber.shade700),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => _showLanguageDialog(settingsProvider),
+                  ),
+                  const Divider(),
+                  _buildSectionHeader(
+                    AppTranslations.t(context, 'dataManagement'),
+                  ),
+                  ListTile(
+                    title: Text(AppTranslations.t(context, 'backupRestore')),
+                    subtitle: Text(
+                      AppTranslations.t(context, 'backupSubtitle'),
+                    ),
                     leading: Icon(Icons.backup, color: Colors.amber.shade700),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                     onTap: () => Navigator.pushNamed(context, '/backup'),
                   ),
                   const Divider(),
-                  _buildSectionHeader('About'),
+                  _buildSectionHeader(AppTranslations.t(context, 'about')),
                   ListTile(
-                    title: const Text('Version'),
+                    title: Text(AppTranslations.t(context, 'version')),
                     subtitle: const Text('1.0.0'),
                     leading: Icon(
                       Icons.info_outline,
@@ -108,19 +140,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   ListTile(
-                    title: const Text('Developer'),
-                    subtitle: const Text('Flour Tracker Team'),
+                    title: Text(AppTranslations.t(context, 'developer')),
+                    subtitle: Text(AppTranslations.t(context, 'developerName')),
                     leading: Icon(Icons.code, color: Colors.amber.shade700),
                   ),
                   const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: settingsProvider.saveSettings,
+                    onPressed: () {
+                      settingsProvider.saveSettings();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            AppTranslations.t(context, 'saveSettings'),
+                          ),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.amber.shade700,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: const Text('Save Settings'),
+                    child: Text(AppTranslations.t(context, 'saveSettings')),
                   ),
                 ],
               ),
@@ -142,37 +184,163 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showCurrencyDialog(SettingsProvider settingsProvider) {
-    final TextEditingController controller = TextEditingController(
-      text: settingsProvider.currencySymbol,
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(AppTranslations.t(context, 'changeCurrencySymbol')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'turkishLira')),
+                  subtitle: const Text('₺'),
+                  value: '₺',
+                  groupValue: settingsProvider.currencySymbol,
+                  onChanged: (value) {
+                    settingsProvider.setCurrencySymbol(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'dollar')),
+                  subtitle: const Text('\$'),
+                  value: '\$',
+                  groupValue: settingsProvider.currencySymbol,
+                  onChanged: (value) {
+                    settingsProvider.setCurrencySymbol(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'euro')),
+                  subtitle: const Text('€'),
+                  value: '€',
+                  groupValue: settingsProvider.currencySymbol,
+                  onChanged: (value) {
+                    settingsProvider.setCurrencySymbol(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'pound')),
+                  subtitle: const Text('£'),
+                  value: '£',
+                  groupValue: settingsProvider.currencySymbol,
+                  onChanged: (value) {
+                    settingsProvider.setCurrencySymbol(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppTranslations.t(context, 'cancel')),
+              ),
+            ],
+          ),
     );
+  }
+
+  void _showDateFormatDialog(SettingsProvider settingsProvider) {
+    final currentFormat = settingsProvider.dateFormat;
+    String selectedFormat = currentFormat;
 
     showDialog(
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Change Currency Symbol'),
-            content: TextField(
-              controller: controller,
-              decoration: const InputDecoration(
-                labelText: 'Currency Symbol',
-                hintText: 'Enter the currency symbol (e.g., ₹, \$, €)',
-                border: OutlineInputBorder(),
-              ),
-              maxLength: 1,
+            title: Text(AppTranslations.t(context, 'changeDateFormat')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'turkishFormat')),
+                  subtitle: Text(
+                    AppTranslations.t(context, 'turkishFormatExample'),
+                  ),
+                  value: 'dd.MM.yyyy',
+                  groupValue: selectedFormat,
+                  onChanged: (value) {
+                    selectedFormat = value!;
+                    Navigator.pop(context, value);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'americanFormat')),
+                  subtitle: Text(
+                    AppTranslations.t(context, 'americanFormatExample'),
+                  ),
+                  value: 'MM/dd/yyyy',
+                  groupValue: selectedFormat,
+                  onChanged: (value) {
+                    selectedFormat = value!;
+                    Navigator.pop(context, value);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'isoFormat')),
+                  subtitle: Text(
+                    AppTranslations.t(context, 'isoFormatExample'),
+                  ),
+                  value: 'yyyy-MM-dd',
+                  groupValue: selectedFormat,
+                  onChanged: (value) {
+                    selectedFormat = value!;
+                    Navigator.pop(context, value);
+                  },
+                ),
+              ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(AppTranslations.t(context, 'cancel')),
               ),
+            ],
+          ),
+    ).then((value) {
+      if (value != null && value != currentFormat) {
+        settingsProvider.setDateFormat(value);
+      }
+    });
+  }
+
+  void _showLanguageDialog(SettingsProvider settingsProvider) {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: Text(AppTranslations.t(context, 'changeLanguage')),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'turkish')),
+                  value: 'tr',
+                  groupValue: settingsProvider.language,
+                  onChanged: (value) {
+                    settingsProvider.setLanguage(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+                RadioListTile<String>(
+                  title: Text(AppTranslations.t(context, 'english')),
+                  value: 'en',
+                  groupValue: settingsProvider.language,
+                  onChanged: (value) {
+                    settingsProvider.setLanguage(value!);
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            actions: [
               TextButton(
-                onPressed: () {
-                  if (controller.text.isNotEmpty) {
-                    settingsProvider.setCurrencySymbol(controller.text);
-                  }
-                  Navigator.pop(context);
-                },
-                child: const Text('Save'),
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppTranslations.t(context, 'cancel')),
               ),
             ],
           ),

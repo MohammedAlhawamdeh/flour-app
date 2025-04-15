@@ -39,7 +39,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading debts: $e')));
+        ).showSnackBar(SnackBar(content: Text('Borçlar yüklenirken hata: $e')));
       }
     } finally {
       setState(() {
@@ -66,13 +66,13 @@ class _DebtsScreenState extends State<DebtsScreen> {
     final settingsProvider = Provider.of<SettingsProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer Debts'),
+        title: const Text('Müşteri Borçları'),
         backgroundColor: Colors.amber.shade700,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadDebts,
-            tooltip: 'Refresh',
+            tooltip: 'Yenile',
           ),
           Switch(
             value: _showOnlyUnpaid,
@@ -89,7 +89,10 @@ class _DebtsScreenState extends State<DebtsScreen> {
           const Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: Center(
-              child: Text('Unpaid Only', style: TextStyle(fontSize: 12)),
+              child: Text(
+                'Sadece Ödenmeyenler',
+                style: TextStyle(fontSize: 12),
+              ),
             ),
           ),
         ],
@@ -105,7 +108,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total Outstanding Debt',
+                  'Toplam Ödenmeyen Borç',
                   style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
                 ),
                 const SizedBox(height: 4),
@@ -141,15 +144,15 @@ class _DebtsScreenState extends State<DebtsScreen> {
                           const SizedBox(height: 16),
                           Text(
                             _showOnlyUnpaid
-                                ? 'No unpaid debts found'
-                                : 'No debts found',
+                                ? 'Ödenmemiş borç bulunamadı'
+                                : 'Borç kaydı bulunamadı',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
                             _showOnlyUnpaid
-                                ? 'All customers have paid their debts'
-                                : 'No customers have any recorded debts',
+                                ? 'Tüm müşteriler borçlarını ödemiş'
+                                : 'Hiçbir müşterinin kaydedilmiş borcu yok',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -173,7 +176,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                   children: [
                                     Expanded(
                                       child: Text(
-                                        debt.customer.name,
+                                        debt.customer.fullName,
                                         style: Theme.of(
                                           context,
                                         ).textTheme.titleLarge?.copyWith(
@@ -194,7 +197,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                         borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
-                                        debt.isPaid ? 'Paid' : 'Unpaid',
+                                        debt.isPaid ? 'Ödendi' : 'Ödenmedi',
                                         style: TextStyle(
                                           color:
                                               debt.isPaid
@@ -208,16 +211,16 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Product: ${debt.product.name}',
+                                  'Ürün: ${debt.product.name}',
                                   style: Theme.of(context).textTheme.bodyLarge,
                                 ),
                                 Text(
-                                  'Date: ${DateFormat('MMM dd, yyyy').format(debt.date)}',
+                                  'Tarih: ${DateFormat(settingsProvider.dateFormat).format(debt.date)}',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 if (debt.isPaid && debt.paidDate != null)
                                   Text(
-                                    'Paid on: ${DateFormat('MMM dd, yyyy').format(debt.paidDate!)}',
+                                    'Ödeme tarihi: ${DateFormat(settingsProvider.dateFormat).format(debt.paidDate!)}',
                                     style: TextStyle(
                                       color: Colors.green.shade700,
                                       fontWeight: FontWeight.w500,
@@ -232,7 +235,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Quantity',
+                                            'Miktar',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,
@@ -254,7 +257,7 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Amount',
+                                            'Tutar',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Colors.grey.shade600,
@@ -286,7 +289,9 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                             );
                                           },
                                           icon: const Icon(Icons.person),
-                                          label: const Text('View Customer'),
+                                          label: const Text(
+                                            'Müşteriyi Görüntüle',
+                                          ),
                                           style: OutlinedButton.styleFrom(
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 12,
@@ -307,7 +312,9 @@ class _DebtsScreenState extends State<DebtsScreen> {
                                             ),
                                           ),
                                           icon: const Icon(Icons.check_circle),
-                                          label: const Text('Mark as Paid'),
+                                          label: const Text(
+                                            'Ödendi Olarak İşaretle',
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -335,19 +342,19 @@ class _DebtsScreenState extends State<DebtsScreen> {
           context: context,
           builder:
               (context) => AlertDialog(
-                title: const Text('Mark Debt as Paid'),
+                title: const Text('Borcu Ödenmiş Olarak İşaretle'),
                 content: Text(
-                  'Are you sure you want to mark this debt of ${settingsProvider.currencySymbol}${debt.amount.toStringAsFixed(2)} as paid?',
+                  '${settingsProvider.currencySymbol}${debt.amount.toStringAsFixed(2)} tutarındaki bu borcu ödenmiş olarak işaretlemek istediğinizden emin misiniz?',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: const Text('İptal'),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
                     child: const Text(
-                      'Mark as Paid',
+                      'Ödenmiş Olarak İşaretle',
                       style: TextStyle(color: Colors.green),
                     ),
                   ),
@@ -362,14 +369,16 @@ class _DebtsScreenState extends State<DebtsScreen> {
         _loadDebts();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Debt marked as paid successfully')),
+            const SnackBar(
+              content: Text('Borç başarıyla ödenmiş olarak işaretlendi'),
+            ),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Error updating debt: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Borç güncellenirken hata: $e')),
+          );
         }
       }
     }

@@ -49,7 +49,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error loading debts: $e')));
+        ).showSnackBar(SnackBar(content: Text('Borçlar yüklenirken hata: $e')));
       }
     } finally {
       setState(() {
@@ -74,15 +74,15 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
       await _databaseService.addDebt(debt);
       _loadDebts(); // Reload the list after adding
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debt added successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Borç başarıyla eklendi')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error adding debt: $e')));
+        ).showSnackBar(SnackBar(content: Text('Borç eklenirken hata: $e')));
       }
     }
   }
@@ -93,14 +93,14 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
       _loadDebts(); // Reload the list after updating
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debt updated successfully')),
+          const SnackBar(content: Text('Borç başarıyla güncellendi')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error updating debt: $e')));
+        ).showSnackBar(SnackBar(content: Text('Borç güncellenirken hata: $e')));
       }
     }
   }
@@ -110,21 +110,18 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Confirm Delete'),
+            title: const Text('Silmeyi Onayla'),
             content: Text(
-              'Are you sure you want to delete this debt record for ${debt.product.name}?',
+              '${debt.product.name} için bu borç kaydını silmek istediğinizden emin misiniz?',
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: const Text('İptal'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Delete',
-                  style: TextStyle(color: Colors.red),
-                ),
+                child: const Text('Sil', style: TextStyle(color: Colors.red)),
               ),
             ],
           ),
@@ -138,20 +135,20 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
   Future<void> _deleteDebt(Debt debt) async {
     try {
       if (debt.id == null) {
-        throw Exception('Cannot delete debt with null ID');
+        throw Exception('Null ID ile borç silinemez');
       }
       await _databaseService.deleteDebt(debt.id!);
       _loadDebts(); // Reload the list after deleting
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debt deleted successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Borç başarıyla silindi')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error deleting debt: $e')));
+        ).showSnackBar(SnackBar(content: Text('Borç silinirken hata: $e')));
       }
     }
   }
@@ -231,7 +228,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      isEditing ? 'Edit Debt' : 'Add New Debt',
+                      isEditing ? 'Borç Düzenle' : 'Yeni Borç Ekle',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -242,7 +239,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     // Product selection section
                     Row(
                       children: [
-                        const Text('Product: '),
+                        const Text('Ürün: '),
                         const SizedBox(width: 8),
                         Expanded(
                           child:
@@ -261,7 +258,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                                       border: OutlineInputBorder(),
                                     ),
                                     value: selectedProduct,
-                                    hint: const Text('Select a product'),
+                                    hint: const Text('Ürün seçin'),
                                     isExpanded: true,
                                     items: [
                                       ...existingProducts.map(
@@ -273,7 +270,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                                       ),
                                       const DropdownMenuItem<FlourProduct?>(
                                         value: null,
-                                        child: Text('+ Create new product'),
+                                        child: Text('+ Yeni ürün oluştur'),
                                       ),
                                     ],
                                     onChanged: (value) {
@@ -299,7 +296,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                                                     productController
                                                         .text
                                                         .isEmpty)
-                                                ? 'Please select or create a product'
+                                                ? 'Lütfen bir ürün seçin veya oluşturun'
                                                 : null,
                                   ),
                         ),
@@ -311,11 +308,11 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     if (isCreatingNewProduct)
                       CustomTextField(
                         controller: productController,
-                        label: 'New Product Name',
+                        label: 'Yeni Ürün Adı',
                         validator: (value) {
                           if (isCreatingNewProduct &&
                               (value == null || value.isEmpty)) {
-                            return 'Please enter a product name';
+                            return 'Lütfen bir ürün adı girin';
                           }
                           return null;
                         },
@@ -327,16 +324,16 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: quantityController,
-                            label: 'Quantity (kg)',
+                            label: 'Miktar (çuval)',
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Required';
+                                return 'Gerekli';
                               }
                               if (double.tryParse(value) == null) {
-                                return 'Invalid number';
+                                return 'Geçersiz sayı';
                               }
                               return null;
                             },
@@ -346,17 +343,16 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                         Expanded(
                           child: CustomTextField(
                             controller: priceController,
-                            label:
-                                'Amount (${settingsProvider.currencySymbol})',
+                            label: 'Tutar (${settingsProvider.currencySymbol})',
                             keyboardType: const TextInputType.numberWithOptions(
                               decimal: true,
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Required';
+                                return 'Gerekli';
                               }
                               if (double.tryParse(value) == null) {
-                                return 'Invalid number';
+                                return 'Geçersiz sayı';
                               }
                               return null;
                             },
@@ -367,13 +363,13 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     const SizedBox(height: 12),
                     CustomTextField(
                       controller: descriptionController,
-                      label: 'Description (optional)',
+                      label: 'Açıklama (isteğe bağlı)',
                       maxLines: 2,
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        const Text('Date: '),
+                        const Text('Tarih: '),
                         TextButton(
                           onPressed: () async {
                             final picked = await showDatePicker(
@@ -391,11 +387,13 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                             }
                           },
                           child: Text(
-                            DateFormat('MMM dd, yyyy').format(selectedDate),
+                            DateFormat(
+                              settingsProvider.dateFormat,
+                            ).format(selectedDate),
                           ),
                         ),
                         const Spacer(),
-                        const Text('Paid: '),
+                        const Text('Ödendi: '),
                         Switch(
                           value: isPaid,
                           onChanged: (value) {
@@ -455,7 +453,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                           Navigator.pop(context);
                         }
                       },
-                      child: Text(isEditing ? 'Update' : 'Add'),
+                      child: Text(isEditing ? 'Güncelle' : 'Ekle'),
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -499,8 +497,8 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('${debt.quantity.toStringAsFixed(1)} kg'),
-                Text(DateFormat('MMM dd, yyyy').format(debt.date)),
+                Text('${debt.quantity.toStringAsFixed(1)} çuval'),
+                Text(DateFormat(settingsProvider.dateFormat).format(debt.date)),
               ],
             ),
             if (debt.description != null && debt.description!.isNotEmpty) ...[
@@ -511,25 +509,50 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Chip(
-                  backgroundColor:
-                      isPaid ? Colors.green.shade100 : Colors.orange.shade100,
-                  label: Text(isPaid ? 'Paid' : 'Unpaid'),
+                // Payment status toggle switch
+                Row(
+                  children: [
+                    Icon(
+                      isPaid ? Icons.check_circle : Icons.pending_actions,
+                      color: isPaid ? Colors.green.shade700 : Colors.orange.shade700,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      isPaid ? 'Ödendi' : 'Ödenmedi',
+                      style: TextStyle(
+                        color: isPaid ? Colors.green.shade700 : Colors.orange.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Switch(
+                      value: isPaid,
+                      activeColor: Colors.green.shade700,
+                      onChanged: (value) {
+                        final updatedDebt = debt.copyWith(
+                          isPaid: value,
+                          paidDate: value ? DateTime.now() : null,
+                        );
+                        _updateDebt(updatedDebt);
+                      },
+                    ),
+                  ],
                 ),
+                // Edit and delete buttons
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blue),
                       onPressed: () => _showDebtForm(debt),
-                      tooltip: 'Edit',
+                      tooltip: 'Düzenle',
                       constraints: const BoxConstraints(),
                       padding: const EdgeInsets.all(8),
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
                       onPressed: () => _confirmDeleteDebt(debt),
-                      tooltip: 'Delete',
+                      tooltip: 'Sil',
                       constraints: const BoxConstraints(),
                       padding: const EdgeInsets.all(8),
                     ),
@@ -549,7 +572,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${widget.customer.name}\'s Debts'),
+        title: Text('${widget.customer.fullName} Borçları'),
         backgroundColor: Colors.amber.shade700,
       ),
       body: Column(
@@ -564,7 +587,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Total Outstanding Debt',
+                        'Toplam Borç Miktarı',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade700,
@@ -588,7 +611,7 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _showDebtForm(),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Debt'),
+                  label: const Text('Borç Ekle'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.amber.shade700,
                   ),
@@ -612,12 +635,12 @@ class _CustomerDebtsScreenState extends State<CustomerDebtsScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'No debts found',
+                            'Borç kaydı bulunamadı',
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Add a debt to get started',
+                            'Başlamak için borç ekleyin',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],

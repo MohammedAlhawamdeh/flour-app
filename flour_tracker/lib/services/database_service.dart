@@ -3,9 +3,11 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:flour_tracker/models/customer.dart';
 import 'package:flour_tracker/models/debt.dart';
+import 'package:flour_tracker/models/expense.dart';
 import 'package:flour_tracker/models/flour_product.dart';
 import 'package:flour_tracker/models/sale.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:intl/intl.dart';
 // Import sqlite3_flutter_libs to ensure SQLite is bundled
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
@@ -50,7 +52,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'flour_tracker.db');
     return await openDatabase(
       path,
-      version: 2, // Increase version number from 1 to 2
+      version: 4, // Increase version number from 3 to 4
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
@@ -65,6 +67,30 @@ class DatabaseService {
       // Add description column to debts table
       await db.execute('ALTER TABLE debts ADD COLUMN description TEXT');
     }
+
+    if (oldVersion < 3) {
+      // Add surname column to customers table
+      await db.execute(
+        'ALTER TABLE customers ADD COLUMN surname TEXT DEFAULT ""',
+      );
+
+      // Create expenses table
+      await db.execute('''
+        CREATE TABLE expenses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          type TEXT NOT NULL,
+          amount REAL NOT NULL,
+          date TEXT NOT NULL,
+          paymentMethod TEXT NOT NULL,
+          description TEXT
+        )
+      ''');
+    }
+
+    if (oldVersion < 4) {
+      // Add category column to products table for Turkish flour types (ekmeklik, böreklik, etc.)
+      await db.execute('ALTER TABLE products ADD COLUMN category TEXT');
+    }
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -75,7 +101,8 @@ class DatabaseService {
         name TEXT NOT NULL,
         pricePerKg REAL NOT NULL,
         quantityInStock REAL NOT NULL,
-        description TEXT
+        description TEXT,
+        category TEXT
       )
     ''');
 
@@ -83,6 +110,7 @@ class DatabaseService {
       CREATE TABLE customers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL,
+        surname TEXT NOT NULL,
         phoneNumber TEXT,
         address TEXT
       )
@@ -115,6 +143,17 @@ class DatabaseService {
         description TEXT,
         FOREIGN KEY (customerId) REFERENCES customers (id),
         FOREIGN KEY (productId) REFERENCES products (id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        paymentMethod TEXT NOT NULL,
+        description TEXT
       )
     ''');
   }
@@ -319,6 +358,65 @@ class DatabaseService {
   Future<int> deleteDebt(int id) async {
     final db = await database;
     return await db.delete('debts', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Expense CRUD Operations
+  Future<int> insertExpense(Expense expense) async {
+    final db = await database;
+    return await db.insert('expenses', expense.toMap());
+  }
+
+  Future<List<Expense>> getExpenses() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query('expenses');
+    return List.generate(maps.length, (i) {
+      return Expense.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<Expense>> getExpensesByDate(DateTime date) async {
+    final db = await database;
+    final String dateStr = DateFormat('yyyy-MM-dd').format(date);
+    final String startDate = '$dateStr 00:00:00.000';
+    final String endDate = '$dateStr 23:59:59.999';
+
+    final List<Map<String, dynamic>> maps = await db.query(
+      'expenses',
+      where: 'date BETWEEN ? AND ?',
+      whereArgs: [startDate, endDate],
+    );
+
+    return List.generate(maps.length, (i) {
+      return Expense.fromMap(maps[i]);
+    });
+  }
+
+  Future<Expense?> getExpense(int id) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'expenses',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isNotEmpty) {
+      return Expense.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<int> updateExpense(Expense expense) async {
+    final db = await database;
+    return await db.update(
+      'expenses',
+      expense.toMap(),
+      where: 'id = ?',
+      whereArgs: [expense.id],
+    );
+  }
+
+  Future<int> deleteExpense(int id) async {
+    final db = await database;
+    return await db.delete('expenses', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> clearAllData() async {

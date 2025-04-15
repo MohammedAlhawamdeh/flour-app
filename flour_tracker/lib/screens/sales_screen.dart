@@ -38,9 +38,9 @@ class _SalesScreenState extends State<SalesScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading sales: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Satışlar yüklenirken hata: $e')),
+        );
       }
     } finally {
       setState(() {
@@ -55,7 +55,7 @@ class _SalesScreenState extends State<SalesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sales Management'),
+        title: const Text('Satış Yönetimi'),
         backgroundColor: Colors.amber.shade700,
       ),
       body:
@@ -73,12 +73,12 @@ class _SalesScreenState extends State<SalesScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No sales found',
+                      'Satış kaydı bulunamadı',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Record a sale to get started',
+                      'Başlamak için bir satış kaydedin',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -101,7 +101,7 @@ class _SalesScreenState extends State<SalesScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  'Sale #${sale.id}',
+                                  'Satış #${sale.id}',
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
@@ -119,7 +119,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  sale.isPaid ? 'Paid' : 'Unpaid',
+                                  sale.isPaid ? 'Ödendi' : 'Ödenmedi',
                                   style: TextStyle(
                                     color:
                                         sale.isPaid
@@ -132,13 +132,63 @@ class _SalesScreenState extends State<SalesScreen> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            'Product: ${sale.product.name}',
-                            style: Theme.of(context).textTheme.bodyLarge,
-                          ),
-                          Text(
-                            'Date: ${DateFormat('MMM dd, yyyy').format(sale.date)}',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Ürün',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      sale.product.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (sale.product.category != null &&
+                                        sale.product.category!.isNotEmpty)
+                                      Text(
+                                        sale.product.category!,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.amber.shade900,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Tarih',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Text(
+                                      DateFormat(
+                                        settingsProvider.dateFormat,
+                                      ).format(sale.date),
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -148,14 +198,14 @@ class _SalesScreenState extends State<SalesScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Quantity',
+                                      'Miktar',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
                                       ),
                                     ),
                                     Text(
-                                      '${sale.quantity.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} kg',
+                                      '${sale.quantity.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -169,7 +219,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Price',
+                                      'Fiyat',
                                       style: TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey.shade600,
@@ -190,7 +240,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           if (sale.customer != null) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'Customer: ${sale.customer!.name}',
+                              'Müşteri: ${sale.customer!.fullName}',
                               style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
@@ -203,6 +253,7 @@ class _SalesScreenState extends State<SalesScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showSaleForm(),
         backgroundColor: Colors.amber.shade700,
+        tooltip: 'Satış Ekle',
         child: const Icon(Icons.add),
       ),
     );
@@ -216,7 +267,7 @@ class _SalesScreenState extends State<SalesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please add flour products before recording a sale'),
+            content: Text('Satış kaydetmeden önce lütfen ürün ekleyin'),
           ),
         );
       }
@@ -253,7 +304,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Record New Sale',
+                    'Yeni Satış Kaydet',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -264,26 +315,18 @@ class _SalesScreenState extends State<SalesScreen> {
                     key: formKey,
                     child: Column(
                       children: [
-                        // Product Dropdown
+                        // Product Dropdown with category grouping
                         DropdownButtonFormField<FlourProduct>(
                           value: selectedProduct,
                           decoration: const InputDecoration(
-                            labelText: 'Select Product',
+                            labelText: 'Ürün Seçin',
                             border: OutlineInputBorder(),
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 16,
                               vertical: 16,
                             ),
                           ),
-                          items:
-                              products.map((product) {
-                                return DropdownMenuItem<FlourProduct>(
-                                  value: product,
-                                  child: Text(
-                                    '${product.name} - ${Provider.of<SettingsProvider>(context).currencySymbol}${product.pricePerKg}/kg (${product.quantityInStock.toStringAsFixed(Provider.of<SettingsProvider>(context).showDecimals ? 2 : 0)} kg in stock)',
-                                  ),
-                                );
-                              }).toList(),
+                          items: _buildProductDropdownItems(products, context),
                           onChanged: (product) {
                             setState(() {
                               selectedProduct = product;
@@ -291,7 +334,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           },
                           validator: (value) {
                             if (value == null) {
-                              return 'Please select a product';
+                              return 'Lütfen bir ürün seçin';
                             }
                             return null;
                           },
@@ -300,20 +343,20 @@ class _SalesScreenState extends State<SalesScreen> {
 
                         // Quantity TextField
                         CustomTextField(
-                          label: 'Quantity (kg)',
+                          label: 'Miktar (çuval)',
                           controller: quantityController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Quantity is required';
+                              return 'Miktar gerekli';
                             }
                             final quantity = double.tryParse(value);
                             if (quantity == null) {
-                              return 'Please enter a valid number';
+                              return 'Lütfen geçerli bir sayı girin';
                             }
                             if (selectedProduct != null &&
                                 quantity > selectedProduct!.quantityInStock) {
-                              return 'Not enough stock available';
+                              return 'Yeterli stok yok';
                             }
                             return null;
                           },
@@ -324,7 +367,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           DropdownButtonFormField<Customer?>(
                             value: selectedCustomer,
                             decoration: const InputDecoration(
-                              labelText: 'Select Customer (Optional)',
+                              labelText: 'Müşteri Seçin (İsteğe bağlı)',
                               border: OutlineInputBorder(),
                               contentPadding: EdgeInsets.symmetric(
                                 horizontal: 16,
@@ -334,12 +377,12 @@ class _SalesScreenState extends State<SalesScreen> {
                             items: [
                               const DropdownMenuItem<Customer?>(
                                 value: null,
-                                child: Text('No Customer (Walk-in)'),
+                                child: Text('Müşteri Yok (Nakit Satış)'),
                               ),
                               ...customers.map((customer) {
                                 return DropdownMenuItem<Customer?>(
                                   value: customer,
-                                  child: Text(customer.name),
+                                  child: Text(customer.fullName),
                                 );
                               }),
                             ],
@@ -362,10 +405,10 @@ class _SalesScreenState extends State<SalesScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('Payment Status:'),
+                                  const Text('Ödeme Durumu:'),
                                   Row(
                                     children: [
-                                      Text(isPaid ? 'Paid' : 'Unpaid'),
+                                      Text(isPaid ? 'Ödendi' : 'Ödenmedi'),
                                       Switch(
                                         value: isPaid,
                                         activeColor: Colors.amber.shade700,
@@ -412,7 +455,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Sale recorded successfully'),
+                                content: Text('Satış başarıyla kaydedildi'),
                               ),
                             );
                           }
@@ -420,7 +463,7 @@ class _SalesScreenState extends State<SalesScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Error recording sale: $e'),
+                                content: Text('Satış kaydedilirken hata: $e'),
                               ),
                             );
                           }
@@ -432,7 +475,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
                     child: const Text(
-                      'Record Sale',
+                      'Satışı Kaydet',
                       style: TextStyle(fontSize: 16),
                     ),
                   ),
@@ -444,5 +487,48 @@ class _SalesScreenState extends State<SalesScreen> {
         );
       },
     );
+  }
+
+  List<DropdownMenuItem<FlourProduct>> _buildProductDropdownItems(
+    List<FlourProduct> products,
+    BuildContext context,
+  ) {
+    final Map<String, List<FlourProduct>> categorizedProducts = {};
+
+    for (var product in products) {
+      final category = product.category ?? 'Diğer';
+      if (!categorizedProducts.containsKey(category)) {
+        categorizedProducts[category] = [];
+      }
+      categorizedProducts[category]!.add(product);
+    }
+
+    final List<DropdownMenuItem<FlourProduct>> items = [];
+    categorizedProducts.forEach((category, products) {
+      items.add(
+        DropdownMenuItem<FlourProduct>(
+          enabled: false,
+          child: Text(
+            category,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade700,
+            ),
+          ),
+        ),
+      );
+      items.addAll(
+        products.map(
+          (product) => DropdownMenuItem<FlourProduct>(
+            value: product,
+            child: Text(
+              '${product.name} - ${Provider.of<SettingsProvider>(context).currencySymbol}${product.pricePerKg}/kg (${product.quantityInStock.toStringAsFixed(Provider.of<SettingsProvider>(context).showDecimals ? 2 : 0)} kg stokta)',
+            ),
+          ),
+        ),
+      );
+    });
+
+    return items;
   }
 }

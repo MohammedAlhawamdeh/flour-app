@@ -5,6 +5,8 @@ import 'package:flour_tracker/models/flour_product.dart';
 import 'package:flour_tracker/services/database_service.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:provider/provider.dart';
+import 'package:flour_tracker/providers/settings_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -29,9 +31,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // Summary metrics
   double _totalRevenue = 0;
   double _totalQuantitySold = 0;
-  int _totalSales = 0;
+  int _totalTransactions = 0;
   int _totalCustomers = 0;
   double _totalUnpaidAmount = 0;
+
+  // Category analysis data
+  Map<String, double> _categoryQuantityMap = {};
+  Map<String, double> _categoryRevenueMap = {};
 
   @override
   void initState() {
@@ -50,15 +56,18 @@ class _ReportsScreenState extends State<ReportsScreen> {
       final products = await _databaseService.getProducts();
 
       // Filter sales by date range
-      final filteredSales = sales.where((sale) {
-        return sale.date.isAfter(_startDate) &&
-            sale.date.isBefore(_endDate.add(const Duration(days: 1)));
-      }).toList();
+      final filteredSales =
+          sales.where((sale) {
+            return sale.date.isAfter(_startDate) &&
+                sale.date.isBefore(_endDate.add(const Duration(days: 1)));
+          }).toList();
 
       // Calculate summary metrics
       double totalRevenue = 0;
       double totalQuantity = 0;
       double unpaidAmount = 0;
+      Map<String, double> categoryQuantity = {};
+      Map<String, double> categoryRevenue = {};
 
       for (var sale in filteredSales) {
         totalRevenue += sale.totalPrice;
@@ -67,6 +76,13 @@ class _ReportsScreenState extends State<ReportsScreen> {
         if (!sale.isPaid) {
           unpaidAmount += sale.totalPrice;
         }
+
+        // Category analysis
+        final category = sale.product.category ?? 'Diğer';
+        categoryQuantity[category] =
+            (categoryQuantity[category] ?? 0) + sale.quantity;
+        categoryRevenue[category] =
+            (categoryRevenue[category] ?? 0) + sale.totalPrice;
       }
 
       setState(() {
@@ -75,36 +91,139 @@ class _ReportsScreenState extends State<ReportsScreen> {
         _products = products;
         _totalRevenue = totalRevenue;
         _totalQuantitySold = totalQuantity;
-        _totalSales = filteredSales.length;
+        _totalTransactions = filteredSales.length;
         _totalCustomers = customers.length;
         _totalUnpaidAmount = unpaidAmount;
+        _categoryQuantityMap = categoryQuantity;
+        _categoryRevenueMap = categoryRevenue;
         _isLoading = false;
       });
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading report data: $e')),
+          SnackBar(content: Text('Rapor verileri yüklenirken hata: $e')),
         );
       }
       setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
-  Widget _buildSummaryCards() {
+  Future<void> _selectDateRange() async {
+    final DateTimeRange? picked = await showDateRangePicker(
+      context: context,
+      initialDateRange: DateTimeRange(start: _startDate, end: _endDate),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Colors.amber.shade700,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _startDate = picked.start;
+        _endDate = picked.end;
+      });
+      _loadReportData();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settingsProvider = Provider.of<SettingsProvider>(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Satış Raporları'),
+        backgroundColor: Colors.amber.shade700,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.date_range),
+            tooltip: 'Tarih Aralığı Seç',
+            onPressed: _selectDateRange,
+          ),
+        ],
+      ),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Date range indicator
+                    Card(
+                      elevation: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: Colors.amber.shade700,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              '${DateFormat(settingsProvider.dateFormat).format(_startDate)} - ${DateFormat(settingsProvider.dateFormat).format(_endDate)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Summary cards
+                    _buildSummaryCards(settingsProvider),
+                    const SizedBox(height: 24),
+
+                    // Category analysis
+                    _buildCategoryAnalysis(settingsProvider),
+                    const SizedBox(height: 24),
+
+                    // Inventory section
+                    _buildInventorySection(settingsProvider),
+                    const SizedBox(height: 24),
+
+                    // Recent sales
+                    _buildRecentSalesSection(settingsProvider),
+                  ],
+                ),
+              ),
+    );
+  }
+
+  Widget _buildSummaryCards(SettingsProvider settingsProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Sales Summary',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          'Satış Özeti',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
               child: _buildSummaryCard(
-                'Total Sales',
-                '₹${_totalSales.toStringAsFixed(2)}',
+                'Toplam Gelir',
+                '${settingsProvider.currencySymbol}${_totalRevenue.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
                 Icons.payments,
                 Colors.green,
               ),
@@ -112,8 +231,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildSummaryCard(
-                'Quantity Sold',
-                '${_totalQuantitySold.toStringAsFixed(2)} kg',
+                'Satılan Miktar',
+                '${_totalQuantitySold.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
                 Icons.inventory,
                 Colors.blue,
               ),
@@ -125,7 +244,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           children: [
             Expanded(
               child: _buildSummaryCard(
-                'Transactions',
+                'İşlem Sayısı',
                 _totalTransactions.toString(),
                 Icons.receipt_long,
                 Colors.purple,
@@ -134,12 +253,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: _buildSummaryCard(
-                'Average Sale',
-                _totalTransactions > 0
-                    ? '₹${(_totalSales / _totalTransactions).toStringAsFixed(2)}'
-                    : '₹0.00',
-                Icons.trending_up,
-                Colors.orange,
+                'Ödenmemiş Tutar',
+                '${settingsProvider.currencySymbol}${_totalUnpaidAmount.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
+                Icons.money_off,
+                Colors.red,
               ),
             ),
           ],
@@ -149,12 +266,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
   }
 
   Widget _buildSummaryCard(
-      String title, String value, IconData icon, Color color) {
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -166,20 +285,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 const SizedBox(width: 8),
                 Text(
                   title,
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
             ),
           ],
         ),
@@ -187,26 +300,29 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildInventorySection() {
-    // Sort products by stock level (ascending)
-    final sortedProducts = List<FlourProduct>.from(_products)
-      ..sort((a, b) => a.quantityInStock.compareTo(b.quantityInStock));
+  Widget _buildCategoryAnalysis(SettingsProvider settingsProvider) {
+    // Sort categories by quantity sold (descending)
+    final sortedCategories =
+        _categoryQuantityMap.keys.toList()..sort(
+          (a, b) =>
+              _categoryQuantityMap[b]!.compareTo(_categoryQuantityMap[a]!),
+        );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Inventory Status',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          'Un Kategorisi Analizi',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
-        if (_products.isEmpty)
+        if (_categoryQuantityMap.isEmpty)
           const Center(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('No inventory data available'),
+              child: Text('Kategori analizi için veri bulunamadı'),
             ),
           )
         else
@@ -221,11 +337,100 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Current Stock Levels',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                    'Kategori Bazında Satış Miktarları',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  for (var category in sortedCategories)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  category,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                '${_categoryQuantityMap[category]!.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          LinearProgressIndicator(
+                            value: _getCategoryPercentage(category),
+                            backgroundColor: Colors.grey.shade200,
+                            valueColor: AlwaysStoppedAnimation(
+                              _getCategoryColor(category),
+                            ),
+                            minHeight: 8,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            '${settingsProvider.currencySymbol}${_categoryRevenueMap[category]!.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildInventorySection(SettingsProvider settingsProvider) {
+    // Sort products by stock level (ascending)
+    final sortedProducts = List<FlourProduct>.from(_products)
+      ..sort((a, b) => a.quantityInStock.compareTo(b.quantityInStock));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Stok Durumu',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 16),
+        if (_products.isEmpty)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Stok verisi bulunamadı'),
+            ),
+          )
+        else
+          Card(
+            elevation: 4,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Güncel Stok Seviyeleri',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                   const SizedBox(height: 16),
                   for (var product in sortedProducts)
@@ -238,20 +443,35 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Expanded(
-                                child: Text(
-                                  product.name,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                  ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    if (product.category != null &&
+                                        product.category!.isNotEmpty)
+                                      Text(
+                                        product.category!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.amber.shade900,
+                                        ),
+                                      ),
+                                  ],
                                 ),
                               ),
                               Text(
-                                '${product.quantityInStock.toStringAsFixed(2)} kg',
+                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: product.quantityInStock < 10
-                                      ? Colors.red
-                                      : Colors.black,
+                                  color:
+                                      product.quantityInStock < 10
+                                          ? Colors.red
+                                          : Colors.black,
                                 ),
                               ),
                             ],
@@ -277,7 +497,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildRecentSalesSection() {
+  Widget _buildRecentSalesSection(SettingsProvider settingsProvider) {
     // Get 5 most recent sales
     List<Sale> recentSales = [];
     if (_sales.isNotEmpty) {
@@ -290,17 +510,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Recent Sales',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          'Son Satışlar',
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         if (recentSales.isEmpty)
           const Center(
             child: Padding(
               padding: EdgeInsets.all(16.0),
-              child: Text('No recent sales data available'),
+              child: Text('Son satış verisi bulunamadı'),
             ),
           )
         else
@@ -316,7 +536,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   for (var i = 0; i < recentSales.length; i++)
                     Padding(
                       padding: EdgeInsets.only(
-                          bottom: i < recentSales.length - 1 ? 16 : 0),
+                        bottom: i < recentSales.length - 1 ? 16 : 0,
+                      ),
                       child: Row(
                         children: [
                           Container(
@@ -336,13 +557,22 @@ class _ReportsScreenState extends State<ReportsScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '${recentSales[i].product.name} - ${recentSales[i].quantity.toStringAsFixed(2)} kg',
+                                  recentSales[i].product.name,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
+                                if (recentSales[i].product.category != null &&
+                                    recentSales[i].product.category!.isNotEmpty)
+                                  Text(
+                                    recentSales[i].product.category!,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.amber.shade900,
+                                    ),
+                                  ),
                                 Text(
-                                  DateFormat('MMM dd, yyyy')
-                                      .format(recentSales[i].date),
+                                  '${recentSales[i].quantity.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval - ${DateFormat(settingsProvider.dateFormat).format(recentSales[i].date)}',
                                   style: TextStyle(
                                     color: Colors.grey.shade600,
                                     fontSize: 12,
@@ -352,7 +582,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             ),
                           ),
                           Text(
-                            '₹${recentSales[i].totalPrice.toStringAsFixed(2)}',
+                            '${settingsProvider.currencySymbol}${recentSales[i].totalPrice.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -384,6 +614,38 @@ class _ReportsScreenState extends State<ReportsScreen> {
       return Colors.orange;
     } else {
       return Colors.green;
+    }
+  }
+
+  double _getCategoryPercentage(String category) {
+    // Calculate as percentage of total sales quantity
+    if (_totalQuantitySold == 0) return 0;
+    return (_categoryQuantityMap[category] ?? 0) / _totalQuantitySold;
+  }
+
+  Color _getCategoryColor(String category) {
+    // Different colors for different flour categories
+    switch (category) {
+      case 'Ekmeklik':
+        return Colors.amber.shade700;
+      case 'Böreklik':
+        return Colors.orange.shade600;
+      case 'Poğaçalık':
+        return Colors.red.shade500;
+      case 'Çöreklik':
+        return Colors.green.shade600;
+      case 'Baklavalik':
+        return Colors.purple.shade500;
+      case 'Keklik':
+        return Colors.blue.shade500;
+      case 'Simitlik':
+        return Colors.brown.shade500;
+      case 'Pidecik':
+        return Colors.teal.shade500;
+      case 'Genel Amaçlı':
+        return Colors.indigo.shade500;
+      default:
+        return Colors.grey.shade600;
     }
   }
 }

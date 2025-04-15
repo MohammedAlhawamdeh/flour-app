@@ -35,9 +35,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading customers: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Müşteriler yüklenirken hata: $e')),
+        );
       }
     } finally {
       setState(() {
@@ -50,7 +50,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Customer Management'),
+        title: const Text('Müşteri Yönetimi'),
         backgroundColor: Colors.amber.shade700,
       ),
       body:
@@ -68,12 +68,12 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'No customers found',
+                      'Müşteri bulunamadı',
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Add a customer to get started',
+                      'Başlamak için bir müşteri ekleyin',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -96,7 +96,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  customer.name,
+                                  customer.fullName,
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(fontWeight: FontWeight.bold),
                                 ),
@@ -115,20 +115,20 @@ class _CustomersScreenState extends State<CustomersScreen> {
                                       );
                                     },
                                     color: Colors.amber.shade700,
-                                    tooltip: 'View Debts',
+                                    tooltip: 'Borçları Görüntüle',
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.edit),
                                     onPressed:
                                         () => _showCustomerForm(customer),
                                     color: Colors.blue,
-                                    tooltip: 'Edit',
+                                    tooltip: 'Düzenle',
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete),
                                     onPressed: () => _deleteCustomer(customer),
                                     color: Colors.red,
-                                    tooltip: 'Delete',
+                                    tooltip: 'Sil',
                                   ),
                                 ],
                               ),
@@ -184,6 +184,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
     final TextEditingController nameController = TextEditingController(
       text: customer?.name ?? '',
     );
+    final TextEditingController surnameController = TextEditingController(
+      text: customer?.surname ?? '',
+    );
     final TextEditingController phoneController = TextEditingController(
       text: customer?.phoneNumber ?? '',
     );
@@ -213,7 +216,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                customer == null ? 'Add New Customer' : 'Edit Customer',
+                customer == null ? 'Yeni Müşteri Ekle' : 'Müşteriyi Düzenle',
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -224,18 +227,19 @@ class _CustomersScreenState extends State<CustomersScreen> {
                 key: formKey,
                 child: Column(
                   children: [
+                    CustomTextField(label: 'Adı', controller: nameController),
                     CustomTextField(
-                      label: 'Customer Name',
-                      controller: nameController,
+                      label: 'Soyadı',
+                      controller: surnameController,
                     ),
                     CustomTextField(
-                      label: 'Phone Number (Optional)',
+                      label: 'Telefon Numarası (İsteğe bağlı)',
                       controller: phoneController,
                       keyboardType: TextInputType.phone,
                       isRequired: false,
                     ),
                     CustomTextField(
-                      label: 'Address (Optional)',
+                      label: 'Adres (İsteğe bağlı)',
                       controller: addressController,
                       isRequired: false,
                     ),
@@ -251,6 +255,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                     final Customer newCustomer = Customer(
                       id: customer?.id,
                       name: nameController.text,
+                      surname: surnameController.text,
                       phoneNumber:
                           phoneController.text.isEmpty
                               ? null
@@ -266,21 +271,23 @@ class _CustomersScreenState extends State<CustomersScreen> {
                         await _databaseService.insertCustomer(newCustomer);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Customer added successfully'),
+                            content: Text('Müşteri başarıyla eklendi'),
                           ),
                         );
                       } else {
                         await _databaseService.updateCustomer(newCustomer);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Customer updated successfully'),
+                            content: Text('Müşteri başarıyla güncellendi'),
                           ),
                         );
                       }
                       _loadCustomers();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error saving customer: $e')),
+                        SnackBar(
+                          content: Text('Müşteri kaydedilirken hata: $e'),
+                        ),
                       );
                     }
                   }
@@ -290,7 +297,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
                 child: Text(
-                  customer == null ? 'Add Customer' : 'Update Customer',
+                  customer == null ? 'Müşteri Ekle' : 'Müşteriyi Güncelle',
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -308,19 +315,19 @@ class _CustomersScreenState extends State<CustomersScreen> {
           context: context,
           builder:
               (context) => AlertDialog(
-                title: const Text('Delete Customer'),
+                title: const Text('Müşteriyi Sil'),
                 content: Text(
-                  'Are you sure you want to delete ${customer.name}? This action cannot be undone and will remove all associated debts.',
+                  '${customer.fullName} müşterisini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz ve ilişkili tüm borçları kaldıracaktır.',
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Cancel'),
+                    child: const Text('İptal'),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
                     child: const Text(
-                      'Delete',
+                      'Sil',
                       style: TextStyle(color: Colors.red),
                     ),
                   ),
@@ -335,13 +342,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
         _loadCustomers();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Customer deleted successfully')),
+            const SnackBar(content: Text('Müşteri başarıyla silindi')),
           );
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error deleting customer: $e')),
+            SnackBar(content: Text('Müşteri silinirken hata: $e')),
           );
         }
       }
