@@ -81,7 +81,7 @@ class _BackupScreenState extends State<BackupScreen> {
   Future<void> _restoreBackup() async {
     // Instead of asking user to pick a file, we'll show a dialog to select from available backups
     final backups = await _backupService.listBackups();
-    
+
     if (backups.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -91,46 +91,47 @@ class _BackupScreenState extends State<BackupScreen> {
       );
       return;
     }
-    
+
     // Show dialog to select a backup
     File? selectedBackup = await showDialog<File>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppTranslations.t(context, 'selectBackup')),
-        content: Container(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: backups.length,
-            itemBuilder: (context, index) {
-              final backupFile = backups[index];
-              final fileName = backupFile.path.split('/').last;
-              final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
-              final lastModified = backupFile.lastModifiedSync();
-              final formattedDate = dateFormat.format(lastModified);
-              
-              return ListTile(
-                title: Text(fileName),
-                subtitle: Text(formattedDate),
-                leading: Icon(Icons.restore),
-                onTap: () => Navigator.pop(context, backupFile),
-              );
-            },
+      builder:
+          (context) => AlertDialog(
+            title: Text(AppTranslations.t(context, 'selectBackup')),
+            content: Container(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: backups.length,
+                itemBuilder: (context, index) {
+                  final backupFile = backups[index];
+                  final fileName = backupFile.path.split('/').last;
+                  final dateFormat = DateFormat('dd.MM.yyyy HH:mm');
+                  final lastModified = backupFile.lastModifiedSync();
+                  final formattedDate = dateFormat.format(lastModified);
+
+                  return ListTile(
+                    title: Text(fileName),
+                    subtitle: Text(formattedDate),
+                    leading: Icon(Icons.restore),
+                    onTap: () => Navigator.pop(context, backupFile),
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppTranslations.t(context, 'cancel')),
+              ),
+            ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppTranslations.t(context, 'cancel')),
-          ),
-        ],
-      ),
     );
-    
+
     if (selectedBackup == null) {
       return; // User cancelled
     }
-    
+
     setState(() {
       _isRestoring = true;
       _errorMessage = null;
@@ -143,21 +144,27 @@ class _BackupScreenState extends State<BackupScreen> {
         showDialog(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: Text(AppTranslations.t(context, 'restoreSuccessTitle')),
-            content: Text(AppTranslations.t(context, 'restoreSuccessMessage')),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  // Restart app or navigate to home screen
-                  Navigator.pushNamedAndRemoveUntil(
-                    context, '/', (route) => false);
-                },
-                child: Text(AppTranslations.t(context, 'ok')),
+          builder:
+              (context) => AlertDialog(
+                title: Text(AppTranslations.t(context, 'restoreSuccessTitle')),
+                content: Text(
+                  AppTranslations.t(context, 'restoreSuccessMessage'),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // Restart app or navigate to home screen
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/',
+                        (route) => false,
+                      );
+                    },
+                    child: Text(AppTranslations.t(context, 'ok')),
+                  ),
+                ],
               ),
-            ],
-          ),
         );
       }
     } catch (e) {

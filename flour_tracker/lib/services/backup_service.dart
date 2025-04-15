@@ -25,7 +25,7 @@ class BackupService {
     // Get database path
     final dbPath = await getDatabasePath();
     final dbFile = File(dbPath);
-    
+
     // Check if database exists
     if (!await dbFile.exists()) {
       throw Exception('Database file not found');
@@ -33,11 +33,11 @@ class BackupService {
 
     // Ensure database is properly closed before backup
     await _databaseService.closeDatabase();
-    
+
     // Create backup file name with timestamp
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     final backupFileName = 'flour_tracker_backup_$timestamp.db';
-    
+
     // Get directory for backup
     Directory? backupDir;
     if (Platform.isAndroid) {
@@ -50,24 +50,24 @@ class BackupService {
       // On desktop, use the downloads directory
       backupDir = await getDownloadsDirectory();
     }
-    
+
     if (backupDir == null) {
       throw Exception('Could not find a suitable directory for backup');
     }
-    
+
     // Create backup directory if it doesn't exist
     final backupPath = join(backupDir.path, 'flour_tracker_backups');
     final backupDirObj = Directory(backupPath);
     if (!await backupDirObj.exists()) {
       await backupDirObj.create(recursive: true);
     }
-    
+
     // Create the backup file path
     final backupFilePath = join(backupPath, backupFileName);
-    
+
     // Copy the database file to the backup location
     final backupFile = await dbFile.copy(backupFilePath);
-    
+
     return backupFile;
   }
 
@@ -95,24 +95,24 @@ class BackupService {
           throw Exception('Storage permission denied');
         }
       }
-      
+
       // Verify the backup file exists
       if (!await backupFile.exists()) {
         throw Exception('Backup file not found');
       }
-      
+
       // Copy to database location
       final dbPath = await getDatabasePath();
-      
+
       // Make sure database is properly closed
       await _databaseService.closeDatabase();
-      
+
       // Wait a moment to ensure the database is fully closed
       await Future.delayed(const Duration(milliseconds: 200));
-      
+
       // Copy the backup file to the database location
       await backupFile.copy(dbPath);
-      
+
       return true;
     } catch (e) {
       debugPrint('Error restoring backup: $e');
@@ -131,27 +131,30 @@ class BackupService {
       } else {
         backupDir = await getDownloadsDirectory();
       }
-      
+
       if (backupDir == null) {
         throw Exception('Could not find backup directory');
       }
-      
+
       final backupPath = join(backupDir.path, 'flour_tracker_backups');
       final backupDirObj = Directory(backupPath);
-      
+
       if (!await backupDirObj.exists()) {
         return [];
       }
-      
-      final files = await backupDirObj
-          .list()
-          .where((entity) => entity is File && entity.path.endsWith('.db'))
-          .map((entity) => entity as File)
-          .toList();
-      
+
+      final files =
+          await backupDirObj
+              .list()
+              .where((entity) => entity is File && entity.path.endsWith('.db'))
+              .map((entity) => entity as File)
+              .toList();
+
       // Sort by creation date (newest first)
-      files.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-      
+      files.sort(
+        (a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()),
+      );
+
       return files;
     } catch (e) {
       debugPrint('Error listing backups: $e');

@@ -47,7 +47,7 @@ class DatabaseService {
         await Future.delayed(const Duration(milliseconds: 50));
       }
     }
-    
+
     if (_database != null) {
       // Check if the database is actually open
       try {
