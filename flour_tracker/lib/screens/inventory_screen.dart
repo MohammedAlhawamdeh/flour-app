@@ -106,19 +106,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    if (product.category != null &&
-                                        product.category!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          product.category!,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.amber.shade900,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ),
                                   ],
                                 ),
                               ),
@@ -144,7 +131,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           Row(
                             children: [
                               _buildInfoItem(
-                                'Kg Başına Fiyat',
+                                'Adet Başına Fiyat',
                                 '${settingsProvider.currencySymbol}${product.pricePerKg.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)}',
                                 _getCurrencyIcon(
                                   settingsProvider.currencySymbol,
@@ -153,7 +140,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               const SizedBox(width: 16),
                               _buildInfoItem(
                                 'Stok Miktarı',
-                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} çuval',
+                                '${product.quantityInStock.toStringAsFixed(settingsProvider.showDecimals ? 2 : 0)} adet',
                                 Icons.inventory,
                               ),
                             ],
@@ -243,22 +230,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       text: product?.description ?? '',
     );
 
-    String selectedCategory = product?.category ?? 'Ekmeklik';
     final formKey = GlobalKey<FormState>();
-
-    // Common Turkish flour categories
-    final List<String> flourCategories = [
-      'Ekmeklik', // Bread flour
-      'Böreklik', // Pastry flour
-      'Poğaçalık', // Biscuit/roll flour
-      'Çöreklik', // Sweet pastry flour
-      'Baklavalik', // Baklava flour
-      'Keklik', // Cake flour
-      'Simitlik', // Bagel flour
-      'Pidecik', // Flatbread flour
-      'Genel Amaçlı', // All-purpose flour
-      'Diğer', // Other
-    ];
 
     await showModalBottomSheet(
       context: context,
@@ -305,37 +277,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           },
                         ),
                         const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
-                          decoration: InputDecoration(
-                            labelText: 'Un Kategorisi',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 16,
-                            ),
-                          ),
-                          value: selectedCategory,
-                          items:
-                              flourCategories
-                                  .map(
-                                    (category) => DropdownMenuItem(
-                                      value: category,
-                                      child: Text(category),
-                                    ),
-                                  )
-                                  .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              selectedCategory = value!;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
                         CustomTextField(
                           label:
-                              'Kg Başına Fiyat (${settingsProvider.currencySymbol})',
+                              'Adet Başına Fiyat (${settingsProvider.currencySymbol})',
                           controller: priceController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
@@ -350,7 +294,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         ),
                         const SizedBox(height: 12),
                         CustomTextField(
-                          label: 'Stok Miktarı (çuval)',
+                          label: 'Stok Miktarı (adet)',
                           controller: quantityController,
                           keyboardType: TextInputType.number,
                           validator: (value) {
@@ -389,7 +333,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               descriptionController.text.isEmpty
                                   ? null
                                   : descriptionController.text,
-                          category: selectedCategory,
+                          category: null, // Removing category
                         );
 
                         try {
