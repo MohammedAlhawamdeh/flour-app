@@ -19,7 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   double _totalSalesToday = 0;
   double _totalOutstandingDebt = 0;
-  List<FlourProduct> _lowStockProducts = [];
 
   @override
   void initState() {
@@ -56,11 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
       _totalOutstandingDebt = debts
           .where((debt) => !debt.isPaid)
           .fold(0, (sum, debt) => sum + debt.amount);
-
-      // Get low stock products (less than 50kg)
-      final products = await _databaseService.getProducts();
-      _lowStockProducts =
-          products.where((product) => product.quantityInStock < 50).toList();
     } catch (e) {
       debugPrint('Error loading dashboard data: $e');
     } finally {
@@ -193,13 +187,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         Icons.account_balance_wallet,
                         _totalOutstandingDebt > 0 ? Colors.red : Colors.green,
                       ),
-                      if (_lowStockProducts.isNotEmpty) ...[
-                        const SizedBox(height: 16),
-                        const Divider(),
-                        const SizedBox(height: 8),
-                        _buildLowStockWarning(context, _lowStockProducts),
-                        const SizedBox(height: 8),
-                      ],
                     ],
                   ),
                 ),
@@ -290,69 +277,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLowStockWarning(
-    BuildContext context,
-    List<FlourProduct> lowStockProducts,
-  ) {
-    if (lowStockProducts.isEmpty) {
-      return Container();
-    }
-
-    return Card(
-      color: Theme.of(context).colorScheme.errorContainer,
-      margin: const EdgeInsets.all(8.0),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppTranslations.t(context, 'lowStockWarning'),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            ...lowStockProducts
-                .map(
-                  (product) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4.0),
-                    child: Text(
-                      '• ${product.name}: ${product.currentStock} ${AppTranslations.t(context, 'unitsLeft')}',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.inventory),
-              label: Text(AppTranslations.t(context, 'goToInventory')),
-              onPressed: () => Navigator.pushNamed(context, '/inventory'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error,
-                foregroundColor: Theme.of(context).colorScheme.onError,
-              ),
-            ),
-          ],
         ),
       ),
     );
