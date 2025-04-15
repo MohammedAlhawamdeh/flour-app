@@ -403,13 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
           route: '/expenses',
           color: Colors.purple.shade700,
         ),
-        _buildMenuCard(
-          context: context,
-          icon: Icons.bar_chart,
-          titleKey: 'menuReports',
-          route: '/reports',
-          color: Colors.teal.shade700,
-        ),
+        // Reports section removed as requested
       ],
     );
   }

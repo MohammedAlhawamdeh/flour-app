@@ -64,8 +64,6 @@ class AppTranslations {
       'debtDescription': 'Track customer debts and payments',
       'expenseTracking': 'Expense Tracking',
       'expenseDescription': 'Track daily business expenses',
-      'reports': 'Reports',
-      'reportsDescription': 'View sales and inventory reports (Coming Soon)',
 
       // Settings screen
       'settingsTitle': 'Settings',
@@ -172,8 +170,6 @@ class AppTranslations {
       'debtDescription': 'Müşteri borçlarını ve ödemelerini takip edin',
       'expenseTracking': 'Gider Takibi',
       'expenseDescription': 'Günlük işletme giderlerini takip edin',
-      'reports': 'Raporlar',
-      'reportsDescription': 'Satış ve stok raporlarını görüntüleyin (Yakında)',
 
       // Settings screen
       'settingsTitle': 'Ayarlar',
