@@ -21,7 +21,7 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
   @override
   void initState() {
     super.initState();
-    _backupService = BackupService(_databaseService);
+    _backupService = BackupService();
     _loadBackups();
   }
 
@@ -31,9 +31,9 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
     });
 
     try {
-      final backups = await _backupService.getAvailableBackups();
+      final backups = await _backupService.listBackups();
       setState(() {
-        _backupFiles = backups;
+        _backupFiles = backups.map((file) => file.path).toList();
       });
     } catch (e) {
       if (mounted) {
@@ -54,12 +54,12 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
         _isLoading = true;
       });
 
-      final backupPath = await _backupService.exportData();
+      final backupFile = await _backupService.createBackup();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Backup created successfully at: $backupPath'),
+            content: Text('Backup created successfully at: ${backupFile.path}'),
           ),
         );
       }
@@ -111,7 +111,8 @@ class _BackupRestoreScreenState extends State<BackupRestoreScreen> {
           _isLoading = true;
         });
 
-        await _backupService.importData(backupPath);
+        final file = File(backupPath);
+        await _backupService.restoreBackup(file);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
