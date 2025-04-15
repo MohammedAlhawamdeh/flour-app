@@ -15,12 +15,36 @@ class CustomersScreen extends StatefulWidget {
 class _CustomersScreenState extends State<CustomersScreen> {
   final DatabaseService _databaseService = DatabaseService();
   List<Customer> _customers = [];
+  List<Customer> _filteredCustomers = [];
   bool _isLoading = true;
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _loadCustomers();
+    _searchController.addListener(_filterCustomers);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_filterCustomers);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterCustomers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        _filteredCustomers = _customers;
+      } else {
+        _filteredCustomers = _customers.where((customer) {
+          final fullName = customer.fullName.toLowerCase();
+          return fullName.contains(query);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _loadCustomers() async {
@@ -32,6 +56,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
       final customers = await _databaseService.getCustomers();
       setState(() {
         _customers = customers;
+        _filteredCustomers = customers;
       });
     } catch (e) {
       if (mounted) {
@@ -53,125 +78,175 @@ class _CustomersScreenState extends State<CustomersScreen> {
         title: const Text('Müşteri Yönetimi'),
         backgroundColor: Colors.amber.shade700,
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _customers.isEmpty
-              ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.people_outline,
-                      size: 80,
-                      color: Colors.grey,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Müşteri bulunamadı',
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Başlamak için bir müşteri ekleyin',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
+      body: Column(
+        children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Müşteri ara...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              )
-              : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: _customers.length,
-                itemBuilder: (context, index) {
-                  final customer = _customers[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  customer.fullName,
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.account_balance_wallet,
-                                    ),
-                                    onPressed: () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        '/customer_debts',
-                                        arguments: customer,
-                                      );
-                                    },
-                                    color: Colors.amber.shade700,
-                                    tooltip: 'Borçları Görüntüle',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed:
-                                        () => _showCustomerForm(customer),
-                                    color: Colors.blue,
-                                    tooltip: 'Düzenle',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete),
-                                    onPressed: () => _deleteCustomer(customer),
-                                    color: Colors.red,
-                                    tooltip: 'Sil',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          if (customer.phoneNumber != null &&
-                              customer.phoneNumber!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 4.0),
-                              child: Row(
-                                children: [
-                                  const Icon(Icons.phone, size: 16),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    customer.phoneNumber!,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          if (customer.address != null &&
-                              customer.address!.isNotEmpty)
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on, size: 16),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    customer.address!,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                filled: true,
+                fillColor: Colors.grey.shade100,
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                        },
+                      )
+                    : null,
               ),
+            ),
+          ),
+          // Results count
+          if (!_isLoading && _searchController.text.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0, left: 16.0, right: 16.0),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_filteredCustomers.length} sonuç bulundu',
+                  style: TextStyle(
+                    color: Colors.grey.shade700,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ),
+          // List of customers
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filteredCustomers.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.people_outline,
+                              size: 80,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              _searchController.text.isNotEmpty
+                                  ? 'Aranan müşteri bulunamadı'
+                                  : 'Müşteri bulunamadı',
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _searchController.text.isNotEmpty
+                                  ? 'Farklı bir arama terimi deneyin'
+                                  : 'Başlamak için bir müşteri ekleyin',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _filteredCustomers.length,
+                        itemBuilder: (context, index) {
+                          final customer = _filteredCustomers[index];
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          customer.fullName,
+                                          style: Theme.of(context).textTheme.titleLarge
+                                              ?.copyWith(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.account_balance_wallet,
+                                            ),
+                                            onPressed: () {
+                                              Navigator.pushNamed(
+                                                context,
+                                                '/customer_debts',
+                                                arguments: customer,
+                                              );
+                                            },
+                                            color: Colors.amber.shade700,
+                                            tooltip: 'Borçları Görüntüle',
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.edit),
+                                            onPressed:
+                                                () => _showCustomerForm(customer),
+                                            color: Colors.blue,
+                                            tooltip: 'Düzenle',
+                                          ),
+                                          IconButton(
+                                            icon: const Icon(Icons.delete),
+                                            onPressed: () => _deleteCustomer(customer),
+                                            color: Colors.red,
+                                            tooltip: 'Sil',
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (customer.phoneNumber != null &&
+                                      customer.phoneNumber!.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 4.0),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.phone, size: 16),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            customer.phoneNumber!,
+                                            style:
+                                                Theme.of(context).textTheme.bodyMedium,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  if (customer.address != null &&
+                                      customer.address!.isNotEmpty)
+                                    Row(
+                                      children: [
+                                        const Icon(Icons.location_on, size: 16),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            customer.address!,
+                                            style:
+                                                Theme.of(context).textTheme.bodyMedium,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCustomerForm(),
         backgroundColor: Colors.amber.shade700,
