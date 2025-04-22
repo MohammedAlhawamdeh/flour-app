@@ -15,6 +15,13 @@ class AppTranslations {
       'expenses': 'Expenses',
       'settings': 'Settings',
       'backup': 'Backup & Restore',
+      
+      // Main menu grid items
+      'menuInventory': 'Inventory',
+      'menuSales': 'Sales',
+      'menuCustomers': 'Customers',
+      'menuDebts': 'Debts',
+      'menuExpenses': 'Expenses',
 
       // Backup screen
       'backupCreated': 'Backup created successfully',
@@ -121,6 +128,13 @@ class AppTranslations {
       'expenses': 'Giderler',
       'settings': 'Ayarlar',
       'backup': 'Yedekleme & Geri Yükleme',
+      
+      // Main menu grid items
+      'menuInventory': 'Stok miktarı',
+      'menuSales': 'Satış',
+      'menuCustomers': 'Müşteri listesi',
+      'menuDebts': 'Veresiye takip',
+      'menuExpenses': 'Günlük gider',
 
       // Backup screen
       'backupCreated': 'Yedekleme başarıyla oluşturuldu',

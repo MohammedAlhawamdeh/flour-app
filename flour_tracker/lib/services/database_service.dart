@@ -98,7 +98,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'flour_tracker.db');
     return await openDatabase(
       path,
-      version: 4, // Increase version number from 3 to 4
+      version: 5, // Increase version number from 4 to 5
       onCreate: _createDatabase,
       onUpgrade: _upgradeDatabase,
     );
@@ -137,6 +137,11 @@ class DatabaseService {
       // Add category column to products table for Turkish flour types (ekmeklik, böreklik, etc.)
       await db.execute('ALTER TABLE products ADD COLUMN category TEXT');
     }
+    
+    if (oldVersion < 5) {
+      // Add pricePerKg column to sales table
+      await db.execute('ALTER TABLE sales ADD COLUMN pricePerKg REAL');
+    }
   }
 
   Future<void> _createDatabase(Database db, int version) async {
@@ -171,6 +176,7 @@ class DatabaseService {
         totalPrice REAL NOT NULL,
         date TEXT NOT NULL,
         isPaid INTEGER NOT NULL,
+        pricePerKg REAL,
         FOREIGN KEY (productId) REFERENCES products (id),
         FOREIGN KEY (customerId) REFERENCES customers (id)
       )
@@ -422,15 +428,21 @@ class DatabaseService {
 
   Future<List<Expense>> getExpensesByDate(DateTime date) async {
     final db = await database;
-    final String dateStr = DateFormat('yyyy-MM-dd').format(date);
-    final String startDate = '$dateStr 00:00:00.000';
-    final String endDate = '$dateStr 23:59:59.999';
+    final DateTime startOfDay = DateTime(date.year, date.month, date.day);
+    final DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
+    
+    final String startDateStr = startOfDay.toIso8601String();
+    final String endDateStr = endOfDay.toIso8601String();
+
+    print("Querying expenses between $startDateStr and $endDateStr"); // Debug output
 
     final List<Map<String, dynamic>> maps = await db.query(
       'expenses',
       where: 'date BETWEEN ? AND ?',
-      whereArgs: [startDate, endDate],
+      whereArgs: [startDateStr, endDateStr],
     );
+
+    print("Found ${maps.length} expenses for selected date"); // Debug output
 
     return List.generate(maps.length, (i) {
       return Expense.fromMap(maps[i]);
