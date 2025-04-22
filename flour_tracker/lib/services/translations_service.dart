@@ -15,7 +15,7 @@ class AppTranslations {
       'expenses': 'Expenses',
       'settings': 'Settings',
       'backup': 'Backup & Restore',
-      
+
       // Main menu grid items
       'menuInventory': 'Inventory',
       'menuSales': 'Sales',
@@ -128,7 +128,7 @@ class AppTranslations {
       'expenses': 'Giderler',
       'settings': 'Ayarlar',
       'backup': 'Yedekleme & Geri Yükleme',
-      
+
       // Main menu grid items
       'menuInventory': 'Stok miktarı',
       'menuSales': 'Satış',

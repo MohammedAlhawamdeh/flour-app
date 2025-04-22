@@ -137,7 +137,7 @@ class DatabaseService {
       // Add category column to products table for Turkish flour types (ekmeklik, böreklik, etc.)
       await db.execute('ALTER TABLE products ADD COLUMN category TEXT');
     }
-    
+
     if (oldVersion < 5) {
       // Add pricePerKg column to sales table
       await db.execute('ALTER TABLE sales ADD COLUMN pricePerKg REAL');
@@ -429,12 +429,22 @@ class DatabaseService {
   Future<List<Expense>> getExpensesByDate(DateTime date) async {
     final db = await database;
     final DateTime startOfDay = DateTime(date.year, date.month, date.day);
-    final DateTime endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59, 999);
-    
+    final DateTime endOfDay = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      23,
+      59,
+      59,
+      999,
+    );
+
     final String startDateStr = startOfDay.toIso8601String();
     final String endDateStr = endOfDay.toIso8601String();
 
-    print("Querying expenses between $startDateStr and $endDateStr"); // Debug output
+    print(
+      "Querying expenses between $startDateStr and $endDateStr",
+    ); // Debug output
 
     final List<Map<String, dynamic>> maps = await db.query(
       'expenses',
